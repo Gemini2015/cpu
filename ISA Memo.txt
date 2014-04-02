@@ -1,0 +1,51 @@
+指令集说明
+
+暂定指令集：
+
+1.算术逻辑：
+add - Add
+addu - Add Unsigned
+addi - Add Immediate
+addiu - Add Immediate Unsigned
+sub - Subtract
+subu - Subtract Unsigned
+subi - Subtract Immediate
+subiu - Subtract Immediate Unsigned
+and - And
+andi - And Immediate
+or - Or
+ori - Or Immediate
+sll - Shift Left Logical
+srl - Shift Right Logical
+nor - Nor
+
+2.比较
+slt - Set Less Than
+sltu - Set Less Than Unsigned
+slti - Set Less Than Immediate
+sltiu - Set Less Than Immediate Unsigned
+
+
+3.存储器读写
+lw - Load Word
+lb - Load Byte
+lbu - Load Byte Unsigned
+lh - Load Halfword 
+lhu - Load Halfword Unsigned
+li - Load Immediate
+sw - Store Word
+sb - Store Byte
+sh - Store Halfword
+
+
+4.分支跳转
+beq - Branch on Equal
+bne - Branch on Not Equal
+j - Jump
+jal - Jump And Link
+jr - Jump Register
+
+注：
+1.一直难以确定指令集。因为还没搞清楚指令集对CPU实现的影响。
+目前最不能确定的是乘除操作，因为根据之前看到的资料，乘除操作所用的流水线与其他操作的流水线是独立的。
+这样一来，就得考虑当进行乘除操作的时候，基本流水线应该怎么处理？暂停，还是？
