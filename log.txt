@@ -1,0 +1,6 @@
+2014-4-9
+1.修改 ISA Memo.txt
+2.添加 regfile.v
+
+2014-4-1
+添加 basic.v
