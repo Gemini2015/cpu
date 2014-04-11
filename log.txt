@@ -1,3 +1,6 @@
+2014-4-10
+添加 alu.v
+
 2014-4-9
 1.修改 ISA Memo.txt
 2.添加 regfile.v

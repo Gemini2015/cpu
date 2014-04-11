@@ -10,8 +10,18 @@
 *
 ***/
 
-// reg file
-// 32 regs
+/* 	
+*	reg file
+*	32 regs
+*
+*	read: 	regA -> Adat, 
+*			regB -> Bdat,
+*			regC -> Cdat
+*
+*	write:	regW -> Wdat
+*	writeEnable: RegWrite
+*
+*/
 module RegFile(clk, rst, regA, regB, regW, Wdat, Adat, Bdat, RegWrite, regC, Cdat);
 	
 	input clk, rst, RegWrite;

@@ -11,7 +11,11 @@
 *
 ***/
 
+
+
 // 32 bit adder
+//对于有符号数，需要考察 OF(overflow)
+//对于无符号数，忽略 OF
 module Adder32(A, B, Cin, m, S, CF, OF);
     
     input[31:0]	A, B;
@@ -30,14 +34,25 @@ endmodule
 
 module Adder8(A, B, Cin, m, S, CF, OF);
     input [7:0]	A, B;
-	 input			Cin, m;
-	 output [7:0]	S;
+	input			Cin, m;
+	output [7:0]	S;
     output	CF, OF;
 
 	Adder4 ad1(A[3:0], B[3:0], Cin, m, S[3:0], t1, t2);
 	Adder4 ad2(A[7:4], B[7:4], t1,  m, S[7:4], CF, OF);
 endmodule
 
+/*
+*
+*	a - b = a + (-b) = a + not(b) + 1
+*
+*	add: cin = 0,
+*		 m = 0;
+*
+*	sub: cin = 1,
+*		 m = 1;
+*
+*/
 module Adder4(A, B, Cin, m, S, CF, OF);
     input[3:0]		A, B;
 	 input			Cin, m;
@@ -45,6 +60,7 @@ module Adder4(A, B, Cin, m, S, CF, OF);
     output	CF, OF;
 	 
 	wire[3:0]	xb, p, g;
+	// if m == 1, not(B)
 	xor(xb[0], B[0], m); xor(xb[1], B[1], m);
 	xor(xb[2], B[2], m); xor(xb[3], B[3], m);
 	and(g[0], A[0], xb[0]);	and(g[1], A[1], xb[1]);
@@ -74,6 +90,8 @@ module Adder4(A, B, Cin, m, S, CF, OF);
 	and(x3, p[3],p[2],p[1],g[0]);
 	and(x4, p[3],p[2],p[1],p[0],Cin);
 	or (CF, g[3], x1, x2, x3, x4);//c4=g3+p3g2+p3p2g1+p3p2p1g0+p3p2p1p0c0
+	//溢出的进位判断法
+	//符号位向前产生的进位值与尾数最高位向前产生的进位值相异时，才会溢出
 	xor(OF, w4, CF);
 	
 endmodule

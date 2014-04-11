@@ -1,54 +1,157 @@
-指令集说明
+INSTRUCTION DETAIL
 
-暂定指令集：
+Chris Cheng
+
+======================================================
+
+Instruction Type & Format
+
+Type R
+		  6 	  5 	  5 	  5 	  5 	 6
+Bit:	31-26,	25-21,	20-16,	15-11,	10-6,	5-0;
+Field:	op		rs 		rt 		rd		shamt	func
+
+Type I
+		  6 	  5 	  5 			  16
+Bit:	31-26,	25-21,	20-16,	15 		-----	  0;
+Field:	op		rs 		rt 				imm
+
+Type J
+		  6 					  26
+Bit:	31-26,	25 				-----			  0;
+Field:	op						address
+
+======================================================
+
+Tips
+
+PC is always point to the next instruction;
+SignExt = { 16{ imm[15] }, imm };
+ZeroExt = { 16{ 1'b0 }, imm };
+BranchAddr = { 14{ imm[15] }, imm, 2'b0 };
+JumpAddr = { PC[31,28], address, 2'b0 };
+
+======================================================
+
+Instruction Set
 
 1.算术逻辑：
 add - Add
+op = 0, func = 32, d = s + t;
+
 addu - Add Unsigned
+op = 0, func = 33, d = s + t;
+
 addi - Add Immediate
+op = 8, t = s + SignExt(imm);
+
 addiu - Add Immediate Unsigned
+op = 9, t = s + SignExt(imm);
+
 sub - Subtract
+op = 0, func = 34, d = s - t;
+
 subu - Subtract Unsigned
-subi - Subtract Immediate
-subiu - Subtract Immediate Unsigned
+op = 0, func = 35, d = s - t;
+
+//subi - Subtract Immediate
+//subiu - Subtract Immediate Unsigned
+
 and - And
+op = 0, func = 36, d = s & t;
+
 andi - And Immediate
+op = 12, t = s & ZeroExt(imm);
+
 or - Or
+op = 0, func = 37, d = s | t;
+
 ori - Or Immediate
-sll - Shift Left Logical
-srl - Shift Right Logical
+op = 13, t = s | ZeroExt(imm);
+
+xor - Xor
+op = 0, func = 38, d = s ^ t;
+
+xori - Xori
+op = 14, t = s ^ ZeroExt(imm);
+
 nor - Nor
+op = 0, func = 39, d = ~(s | t);
+
+sll - Shift Left Logical
+op = 0, func = 0, d = s << shamt;
+
+srl - Shift Right Logical
+op = 0, func = 2, d = s >> shamt;
 
 2.比较
 slt - Set Less Than
-sltu - Set Less Than Unsigned
-slti - Set Less Than Immediate
-sltiu - Set Less Than Immediate Unsigned
+op = 0, func = 42, if(s < t) d = 1; else d = 0;
 
+sltu - Set Less Than Unsigned
+op = 0, func = 43, if(s < t) d = 1; else d = 0; UNSIGNED NUMBER COMPARISION
+
+slti - Set Less Than Immediate
+op = 10, if(s < SignExt(imm)) t = 1; else t = 0;
+
+sltiu - Set Less Than Immediate Unsigned
+op = 11, if(s < SignExt(imm)) t = 1; else t = 0; UNSIGNED NUMBER COMPARISION
 
 3.存储器读写
 lw - Load Word
-lb - Load Byte
-lbu - Load Byte Unsigned
-lh - Load Halfword 
-lhu - Load Halfword Unsigned
-li - Load Immediate
-sw - Store Word
-sb - Store Byte
-sh - Store Halfword
+op = 35, t = M[s + SignExt(imm)];
 
+lb - Load Byte
+op = 32, t = SignExt(M[s + SignExt(imm)];
+
+lbu - Load Byte Unsigned
+op = 36, t = { 24'b0, M[s + SignExt(imm)](7:0) };
+
+lh - Load Halfword
+op = 33, t = M[s + imm];
+
+lhu - Load Halfword Unsigned
+op = 37, t = { 16'b0, M[s + SignExt(imm)](15:0) };
+
+lui - Load Immediate
+op = 15, t = { imm, 16'b0 };
+
+sw - Store Word
+op = 43, M[s + SignExt(imm)] = t;
+
+sb - Store Byte
+op = 40, M[s + SignExt(imm)](7:0) = t(7:0);
+
+sh - Store Halfword
+op = 41, M[s + imm](15:0) = t(15:0);
 
 4.分支跳转
 beq - Branch on Equal
-bne - Branch on Not Equal
-j - Jump
-jal - Jump And Link
-jr - Jump Register
+op = 4, if(s == t) PC = PC + BranchAddr;
 
-注：
-1.一直难以确定指令集。因为还没搞清楚指令集对CPU实现的影响。
-目前最不能确定的是乘除操作，因为根据之前看到的资料，乘除操作所用的流水线与其他操作的流水线是独立的。
-这样一来，就得考虑当进行乘除操作的时候，基本流水线应该怎么处理？暂停，还是？
+bne - Branch on Not Equal
+op = 5, if(s != t) PC = PC + BranchAddr;
+
+j - Jump
+op = 2, PC = JumpAddr;
+
+jal - Jump And Link
+op = 3, $ra = PC + 4; PC = JumpAddr; 
+// PC point to the Branch Delay Slot, PC + 4 is the return address
+
+jr - Jump Register
+op = 0, func = 8, PC = s
+
+======================================================
+
+Log:
+2014-4-11
+添加指令的 op, func, 以及功能
 
 2014-4-9
 确定不实现乘除操作。
+
+2014-4-1
+一直难以确定指令集。因为还没搞清楚指令集对CPU实现的影响。
+目前最不能确定的是乘除操作，因为根据之前看到的资料，乘除操作所用的流水线与其他操作的流水线是独立的。
+这样一来，就得考虑当进行乘除操作的时候，基本流水线应该怎么处理？暂停，还是？
