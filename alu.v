@@ -1,9 +1,9 @@
 /*
-*	ALU & Adder
+*	ALU & ALU controller & Adder
 *
 *	32 bits ALU
 *	adder:	32,8
-*	full adder:	4 
+*	adder:	4 
 *
 *
 *	Chris Cheng
@@ -11,6 +11,17 @@
 *
 ***/
 
+/*
+*	ALU relative instruction
+*
+*	add, addu, addi, addiu, sub, subu,
+*	and, andi, or, ori, xor, xori, nor
+*	sll, srl
+*	slt, sltu, slti, sltiu
+*	lw, lb, lbu, lh, lhu, lui
+*	sw, sb, sh	
+*
+***/
 
 
 // 32 bit adder
