@@ -31,22 +31,22 @@
 *
 ***/
 module ALU_Unit(
-    input[DP_WIDTH - 1:0]	A,
-    input[DP_WIDTH - 1:0]	B,
-    input[ALUOP_WIDTH - 1:0]  ALUOp,
+    input[`DP_WIDTH - 1:0]	A,
+    input[`DP_WIDTH - 1:0]	B,
+    input[`ALUOP_WIDTH - 1:0]  ALUOp,
     input[4:0]	Shamt,
-    output reg [DP_WIDTH - 1:0]	Result,
-    output reg Carry,
-    output reg OverFlow
+    output reg [`DP_WIDTH - 1:0]	Result,
+    output Carry,
+    output OverFlow
 	);
 	
 	// Internal signals
 	// add or sub flag
 	// Add: AddSub_Mode = 0
 	// Sub: AddSub_Mode = 1
-	wire signed[DP_WIDTH - 1:0] SignedA, SignedB;
+	wire signed[`DP_WIDTH - 1:0] SignedA, SignedB;
     wire AddSub_Mode;
-    wire[DP_WIDTH - 1:0] AddSub_Result;
+    wire[`DP_WIDTH - 1:0] AddSub_Result;
     
     // Initial
     assign AddSub_Mode = ((ALUOp == AluOp_Sub) | (ALUOp == AluOp_Subu));
@@ -89,14 +89,14 @@ endmodule
 *
 **/
 module ALU_Controller(
-	input[OPCODE_WIDTH - 1:0] op_code,
-	input[FUNCCODE_WIDTH - 1:0] func_code,
-	output[ALUOP_WIDTH - 1:0] ALUop_code
+	input[`OPCODE_WIDTH - 1:0] op_code,
+	input[`FUNCCODE_WIDTH - 1:0] func_code,
+	output[`ALUOP_WIDTH - 1:0] ALUop_code
 	);
 	
-	wire[OPCODE_WIDTH -1:0] op_code;
-	wire[FUNCCODE_WIDTH - 1:0] func_code;
-	reg[ALUOP_WIDTH - 1:0] ALUop_code;
+	wire[`OPCODE_WIDTH -1:0] op_code;
+	wire[`FUNCCODE_WIDTH - 1:0] func_code;
+	reg[`ALUOP_WIDTH - 1:0] ALUop_code;
 
 	always@(*)
 	begin
@@ -129,7 +129,7 @@ module ALU_Controller(
             Op_Lbu      : ALUOp <= AluOp_Addu;
             Op_Lh       : ALUOp <= AluOp_Addu;
             Op_Lhu      : ALUOp <= AluOp_Addu;
-            Op_Lui      : ALUOp <= AluOp_Sllc;
+            Op_Lui      : ALUOp <= AluOp_Addu;
             Op_Lw       : ALUOp <= AluOp_Addu;
             Op_Ori      : ALUOp <= AluOp_Or;
             Op_Sb       : ALUOp <= AluOp_Addu;
