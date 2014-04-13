@@ -8,8 +8,24 @@
 *	2014-4-13
 *
 ***/
+/***
+
+	Define of Datapath width 
+
+***/
+
+`define DP_WIDTH = 32;
+
+
+
+/***
+
+	Some Parameters in ALU Unit
+
+***/
 
 `define OPCODE_WIDTH = 6;
+
 /* Op Code Categories */
 parameter [OPCODE_WIDTH - 1:0]  Op_Type_R   = 6'b00_0000;  // Standard R-Type instructions
 

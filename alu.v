@@ -24,6 +24,34 @@
 ***/
 `include "cpu_para.v"
 
+/*
+*
+*	ALU Unit
+*
+*	process Arithmetic operations and logical operations
+*
+***/
+module ALU_Unit(
+	input	clk,
+    input	rst,
+    input[DP_WIDTH - 1:0]	A,
+    input[DP_WIDTH - 1:0]	B,
+    input[ALUOP_WIDTH - 1:0]  ALUOp,
+    input  signed [4:0]	Shamt,
+    output reg [DP_WIDTH - 1:0]	Result,
+    output reg Carry,
+    output reg OverFlow
+	);
+
+endmodule
+
+/*
+* 
+*	ALU Controller
+*
+*	Decode Instruction Op_code and Func_code
+*
+**/
 module ALU_Controller(
 	input[OPCODE_WIDTH - 1:0] op_code,
 	input[FUNCCODE_WIDTH - 1:0] func_code,
