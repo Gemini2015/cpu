@@ -18,8 +18,7 @@
 *	and, andi, or, ori, xor, xori, nor
 *	sll, srl
 *	slt, sltu, slti, sltiu
-*	lw, lb, lbu, lh, lhu, lui
-*	sw, sb, sh	
+*
 *
 ***/
 `include "cpu_para.v"
@@ -32,16 +31,53 @@
 *
 ***/
 module ALU_Unit(
-	input	clk,
-    input	rst,
     input[DP_WIDTH - 1:0]	A,
     input[DP_WIDTH - 1:0]	B,
     input[ALUOP_WIDTH - 1:0]  ALUOp,
-    input  signed [4:0]	Shamt,
+    input[4:0]	Shamt,
     output reg [DP_WIDTH - 1:0]	Result,
     output reg Carry,
     output reg OverFlow
 	);
+	
+	// Internal signals
+	// add or sub flag
+	// Add: AddSub_Mode = 0
+	// Sub: AddSub_Mode = 1
+	wire signed[DP_WIDTH - 1:0] SignedA, SignedB;
+    wire AddSub_Mode;
+    wire[DP_WIDTH - 1:0] AddSub_Result;
+    
+    // Initial
+    assign AddSub_Mode = ((ALUOp == AluOp_Sub) | (ALUOp == AluOp_Subu));
+    Adder32 adder(
+    		.A(A),
+    		.B(B),
+    		.Cin(AddSub_Mode),
+    		.m(AddSub_Mode),
+    		.S(AddSub_Result),
+    		.Carry(Carry),
+    		.OverFlow(OverFlow)
+    		);
+
+    always @(*)
+    begin
+        case (ALUOp)
+            AluOp_Add   : Result <= AddSub_Result;
+            AluOp_Addu  : Result <= AddSub_Result;
+            AluOp_And   : Result <= A & B;
+            AluOp_Nor   : Result <= ~(A | B);
+            AluOp_Or    : Result <= A | B;
+            AluOp_Sll   : Result <= B << Shamt;
+            AluOp_Slt   : Result <= (SignedA < SignedB) ? 32'h00000001 : 32'h00000000;
+            AluOp_Sltu  : Result <= (A < B)   ? 32'h00000001 : 32'h00000000;
+            AluOp_Srl   : Result <= B >> Shamt;
+            AluOp_Sub   : Result <= AddSub_Result;
+            AluOp_Subu  : Result <= AddSub_Result;
+            AluOp_Xor   : Result <= A ^ B;
+            default     : Result <= 32'bx;
+        endcase
+    end
 
 endmodule
 
@@ -109,32 +145,32 @@ module ALU_Controller(
 endmodule
 
 // 32 bit adder
-//对于有符号数，需要考察 OF(overflow)
-//对于无符号数，忽略 OF
-module Adder32(A, B, Cin, m, S, CF, OF);
+//对于有符号数，需要考察 OverFlow
+//对于无符号数，忽略 OverFlow
+module Adder32(A, B, Cin, m, S, Carry, OverFlow);
     
     input[31:0]	A, B;
 	input Cin, m;
 	output[31:0] S;
-    output CF, OF;
+    output Carry, OverFlow;
 
 	wire t1, t2, t3, t4;
 	
 	Adder8 ad1(A[ 7: 0], B[ 7: 0], Cin, m, S[ 7: 0], t1, t4);
 	Adder8 ad2(A[15: 8], B[15: 8], t1,  m, S[15: 8], t2, t5);
 	Adder8 ad3(A[23:16], B[23:16], t2,  m, S[23:16], t3, t6);
-	Adder8 ad4(A[31:24], B[31:24], t3,  m, S[31:24], CF, OF);
+	Adder8 ad4(A[31:24], B[31:24], t3,  m, S[31:24], Carry, OverFlow);
 
 endmodule
 
-module Adder8(A, B, Cin, m, S, CF, OF);
+module Adder8(A, B, Cin, m, S, Carry, OverFlow);
     input [7:0]	A, B;
 	input			Cin, m;
 	output [7:0]	S;
-    output	CF, OF;
+    output	Carry, OverFlow;
 
 	Adder4 ad1(A[3:0], B[3:0], Cin, m, S[3:0], t1, t2);
-	Adder4 ad2(A[7:4], B[7:4], t1,  m, S[7:4], CF, OF);
+	Adder4 ad2(A[7:4], B[7:4], t1,  m, S[7:4], Carry, OverFlow);
 endmodule
 
 /*
@@ -148,11 +184,11 @@ endmodule
 *		 m = 1;
 *
 */
-module Adder4(A, B, Cin, m, S, CF, OF);
+module Adder4(A, B, Cin, m, S, Carry, OverFlow);
     input[3:0]		A, B;
-	 input			Cin, m;
+	input			Cin, m;
     output[3:0]	S;
-    output	CF, OF;
+    output	Carry, OverFlow;
 	 
 	wire[3:0]	xb, p, g;
 	// if m == 1, not(B)
@@ -184,9 +220,9 @@ module Adder4(A, B, Cin, m, S, CF, OF);
 	and(x2, p[3],p[2],g[1]);
 	and(x3, p[3],p[2],p[1],g[0]);
 	and(x4, p[3],p[2],p[1],p[0],Cin);
-	or (CF, g[3], x1, x2, x3, x4);//c4=g3+p3g2+p3p2g1+p3p2p1g0+p3p2p1p0c0
+	or (Carry, g[3], x1, x2, x3, x4);//c4=g3+p3g2+p3p2g1+p3p2p1g0+p3p2p1p0c0
 	//溢出的进位判断法
 	//符号位向前产生的进位值与尾数最高位向前产生的进位值相异时，才会溢出
-	xor(OF, w4, CF);
+	xor(OverFlow, w4, Carry);
 	
 endmodule
