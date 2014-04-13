@@ -22,7 +22,63 @@
 *	sw, sb, sh	
 *
 ***/
+`include "cpu_para.v"
 
+module ALU_Controller(
+	input[OPCODE_WIDTH - 1:0] op_code,
+	input[FUNCCODE_WIDTH - 1:0] func_code,
+	output[ALUOP_WIDTH - 1:0] ALUop_code
+	);
+	
+	wire[OPCODE_WIDTH -1:0] op_code;
+	wire[FUNCCODE_WIDTH - 1:0] func_code;
+	reg[ALUOP_WIDTH - 1:0] ALUop_code;
+
+	always@(*)
+	begin
+		case(op_code)
+			// R type Instruction
+			Op_Type_R:
+			begin
+				case(func_code)
+					Func_Add 	: ALUop_code <= AluOp_Add;
+					Func_Addu	: ALUop_code <= AluOp_Addu;
+					Func_And	: ALUop_code <= AluOp_And;
+					//Func_Jr:	ALUop_code <= AluOp_;
+					Func_Nor	: ALUop_code <= AluOp_Nor;
+					Func_Or 	: ALUop_code <= AluOp_Or;
+					Func_Sll	: ALUop_code <= AluOp_Sll;
+					Func_Slt 	: ALUop_code <= AluOp_Slt;
+					Func_Sltu 	: ALUop_code <= AluOp_Sltu;
+					Func_Srl 	: ALUop_code <= AluOp_Srl;
+					Func_Sub 	: ALUop_code <= AluOp_Sub;
+					Func_Subu 	: ALUop_code <= AluOp_Subu;
+					Func_Xor 	: ALUop_code <= AluOp_Xor;
+					default 	: ALUop_code <= AluOp_Addu;
+				endcase
+			end
+			Op_Addi     : ALUOp <= AluOp_Add;
+            Op_Addiu    : ALUOp <= AluOp_Addu;
+            Op_Andi     : ALUOp <= AluOp_And;
+            Op_Jal      : ALUOp <= AluOp_Addu;
+            Op_Lb       : ALUOp <= AluOp_Addu;
+            Op_Lbu      : ALUOp <= AluOp_Addu;
+            Op_Lh       : ALUOp <= AluOp_Addu;
+            Op_Lhu      : ALUOp <= AluOp_Addu;
+            Op_Lui      : ALUOp <= AluOp_Sllc;
+            Op_Lw       : ALUOp <= AluOp_Addu;
+            Op_Ori      : ALUOp <= AluOp_Or;
+            Op_Sb       : ALUOp <= AluOp_Addu;
+            Op_Sh       : ALUOp <= AluOp_Addu;
+            Op_Slti     : ALUOp <= AluOp_Slt;
+            Op_Sltiu    : ALUOp <= AluOp_Sltu;
+            Op_Sw       : ALUOp <= AluOp_Addu;
+            Op_Xori     : ALUOp <= AluOp_Xor;
+            default     : ALUOp <= AluOp_Addu;
+		endcase
+	end
+
+endmodule
 
 // 32 bit adder
 //对于有符号数，需要考察 OF(overflow)
