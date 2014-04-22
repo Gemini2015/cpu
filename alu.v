@@ -4,7 +4,7 @@
 *	32 bits ALU
 *	adder:	32,8
 *	adder:	4 
-*
+*	Comparator:	32
 *
 *	Chris Cheng
 *	2014-4-9
@@ -226,3 +226,23 @@ module Adder4(A, B, Cin, m, S, Carry, OverFlow);
 	xor(OverFlow, w4, Carry);
 	
 endmodule
+
+/*
+*
+*	Comparator
+*
+*	Compare two 32 bits value
+*
+*
+***/
+module Compare32(
+	input[`DP_WIDTH - 1:0] A,
+	input[`DP_WIDTH - 1:0] B,
+	output EQ,
+	);
+	
+	assign EQ = (A == B);
+
+endmodule
+
+
