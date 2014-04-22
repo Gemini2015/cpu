@@ -15,9 +15,9 @@
 ***/
 
 `define DP_WIDTH 32
+`define ADDR_WIDTH 30
 `define HALF_DP_WIDTH 16
 `define REG_WIDTH 5
-
 
 /***
 
