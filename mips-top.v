@@ -449,6 +449,8 @@ module Processor(
         .ID_ReadData1      (ID_ReadData1_End),
         .ID_ReadData2      (ID_ReadData2_End),
         .ID_SignExtImm     (ID_SignExtImm[16:0]),
+        //-----------------------------------------
+        // Output
         .EX_Link           (EX_Link),
         .EX_LinkRegDst     (EX_LinkRegDst),
         .EX_ALUSrcImm      (EX_ALUSrcImm),

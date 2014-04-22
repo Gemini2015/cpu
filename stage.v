@@ -59,8 +59,8 @@ module IDEXE(
     input  ID_RegDst,
     input  ID_ALUSrcImm,
     input  [`ALUOP_WIDTH - 1:0] ID_ALUOp,
-    input  ID_Movn,
-    input  ID_Movz,
+    //input  ID_Movn,
+    //input  ID_Movz,
     input  ID_LLSC,
     input  ID_MemRead,
     input  ID_MemWrite,
@@ -126,7 +126,7 @@ module IDEXE(
     output reg EX_M_CanErr,
     output reg [`DP_WIDTH - 1:0] EX_ReadData1,
     output reg [`DP_WIDTH - 1:0] EX_ReadData2,
-    output [`DP_WIDTH - 1:0] EX_SignExtImm,
+    output [`HALF_DP_WIDTH - 1:0] EX_SignExtImm,
     output [`REG_WIDTH - 1:0]      EX_Rd,
     output [`REG_WIDTH - 1:0]      EX_Shamt
     );
