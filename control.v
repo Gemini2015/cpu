@@ -1,6 +1,7 @@
 /*
-*	MIPS CPU top module
+*	MIPS CPU Control Unit
 *
+*	Generate control signal include ALUOp
 *	
 *
 *
@@ -8,7 +9,7 @@
 *	2014-4-26
 *
 ***/
-`include "cpu-para.v"
+`include "cpu_para.v"
 
 module Control(
     input  ID_Stall,
