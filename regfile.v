@@ -22,7 +22,7 @@
 *	writeEnable: RegWrite
 *
 */
-module RegFile(clk, rst, regA, regB, regW, Wdat, Adat, Bdat, RegWrite);
+module RegFile(clk, rst, regA, regB, regW, Wdat, RegWrite, Adat, Bdat);
 	
 	input clk, rst, RegWrite;
    	input [4:0] regA, regB, regW;

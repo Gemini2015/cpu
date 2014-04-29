@@ -23,7 +23,7 @@
 `define ALUOP_WIDTH 4
 `define CTLBUS_WIDTH 12
 `define HAZARD_WIDTH 8
-
+`define JUMPADDR_WIDTH 26
 /***
 
 	Some Parameters in ALU Unit

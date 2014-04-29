@@ -25,16 +25,12 @@ module Hazard_Detection(
     input  WB_RegWrite,
     input  MEM_MemRead,
     input  MEM_MemWrite,        // Needed for Store Conditional which writes to a register
+    
     input  InstMem_Read,
     input  InstMem_Ready,
-    /*
-    input  Mfc0,                // Using fwd mux; not part of haz/fwd.
-    input  IF_Exception_Stall,
-    input  ID_Exception_Stall,
-    input  EX_Exception_Stall,
-    */
+    
     input  EX_ALU_Stall;
-    input  M_Stall_Controller,  // Determined by data memory controller
+    input  MEM_Stall_Controller,  // Determined by data memory controller
 
     // ----- Output ---------
     output IF_Stall,
@@ -46,7 +42,7 @@ module Hazard_Detection(
     output [1:0] ID_RtFwdSel,
     output [1:0] EX_RsFwdSel,
     output [1:0] EX_RtFwdSel,
-    output M_WriteDataFwdSel
+    output MEM_WriteDataFwdSel
     );
     
     /* Hazard and Forward Detection
@@ -161,6 +157,6 @@ module Hazard_Detection(
     assign ID_RtFwdSel = (ID_Fwd_2) ? 2'b01 : ((ID_Fwd_4) ? 2'b10 : 2'b00);
     assign EX_RsFwdSel = (EX_Link) ? 2'b11 : ((EX_Fwd_1) ? 2'b01 : ((EX_Fwd_3) ? 2'b10 : 2'b00));
     assign EX_RtFwdSel = (EX_Link) ? 2'b11 : ((EX_Fwd_2) ? 2'b01 : ((EX_Fwd_4) ? 2'b10 : 2'b00));
-    assign M_WriteDataFwdSel = MEM_Fwd_1;
+    assign MEM_WriteDataFwdSel = MEM_Fwd_1;
     
 endmodule

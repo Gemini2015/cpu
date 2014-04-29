@@ -13,8 +13,6 @@
 module Processor(
 	input  clk,
     input  rst,
-    //input  [4:0] Interrupts,            // 5 general-purpose hardware interrupts
-    //input  NMI,                         // Non-maskable interrupt
 
     // Instruction Memory Interface
     input  [`DP_WIDTH - 1:0] InstMem_In,
@@ -33,22 +31,24 @@ module Processor(
     );
 
 	/*** MIPS Instruction and Components (ID Stage) ***/
-    wire [31:0] Instruction;
-    wire [5:0]  OpCode = Instruction[31:26];
-    wire [4:0]  Rs = Instruction[25:21];
-    wire [4:0]  Rt = Instruction[20:16];
-    wire [4:0]  Rd = Instruction[15:11];
-    wire [5:0]  Funct = Instruction[5:0];
-    wire [15:0] Immediate = Instruction[15:0];
-    wire [25:0] JumpAddress = Instruction[25:0];
+    wire [`DP_WIDTH - 1:0] Instruction;
+    wire [`OPCODE_WIDTH - 1:0]  OpCode = Instruction[31:26];
+    wire [`REG_WIDTH - 1:0]  Rs = Instruction[25:21];
+    wire [`REG_WIDTH - 1:0]  Rt = Instruction[20:16];
+    wire [`REG_WIDTH - 1:0]  Rd = Instruction[15:11];
+    wire [`FUNCCODE_WIDTH - 1:0]  Func = Instruction[5:0];
+    wire [`HALF_DP_WIDTH - 1:0] Immediate = Instruction[15:0];
+    wire [`JUMPADDR_WIDTH - 1:0] JumpAddress = Instruction[25:0];
     //wire [2:0]  Cp0_Sel = Instruction[2:0];
 
     /*** IF (Instruction Fetch) Signals ***/
     wire IF_Stall, IF_Flush;
+    /*
     wire IF_EXC_AdIF;
     wire IF_Exception_Stall;
     wire IF_Exception_Flush;
-    wire IF_IsBDS;
+    */
+    wire IF_IsBDS;  //Next is branch delay slot
     wire [31:0] IF_PCAdd4, IF_PC_PreExc, IF_PCIn, IF_PCOut, IF_Instruction;
 
     /*** ID (Instruction Decode) Signals ***/
@@ -58,11 +58,11 @@ module Processor(
     wire ID_Link, ID_Movn, ID_Movz;
     wire ID_SignExtend;
     wire ID_LLSC;
-    wire ID_RegDst, ID_ALUSrcImm, ID_MemWrite, ID_MemRead, ID_MemByte, ID_MemHalf, ID_MemSignExtend, ID_RegWrite, ID_MemtoReg;
+    wire ID_RegDst, ID_ALUSrcSel, ID_MemWrite, ID_MemRead, ID_MemByte, ID_MemHalf, ID_MemSignExtend, ID_RegWrite, ID_MemtoReg;
     wire [4:0] ID_ALUOp;
     wire ID_Mfc0, ID_Mtc0, ID_Eret;
     wire ID_NextIsDelay;
-    wire ID_CanErr, ID_ID_CanErr, ID_EX_CanErr, ID_M_CanErr;
+    wire ID_CanErr, ID_ID_CanErr, ID_EX_CanErr, ID_MEM_CanErr;
     wire ID_KernelMode;
     wire ID_ReverseEndian;
     wire ID_Trap, ID_TrapCond;
@@ -76,7 +76,7 @@ module Processor(
     wire [31:0] ID_ReadData1_RF, ID_ReadData1_End;
     wire [31:0] ID_ReadData2_RF, ID_ReadData2_End;
     wire [31:0] CP0_RegOut;
-    wire ID_CmpEQ, ID_CmpGZ, ID_CmpLZ, ID_CmpGEZ, ID_CmpLEZ;
+    wire ID_CompEQ, ID_CmpGZ, ID_CmpLZ, ID_CmpGEZ, ID_CmpLEZ;
     wire [29:0] ID_SignExtImm = (ID_SignExtend & Immediate[15]) ? {14'h3FFF, Immediate} : {14'h0000, Immediate};
     wire [31:0] ID_ImmLeftShift2 = {ID_SignExtImm[29:0], 2'b00};
     wire [31:0] ID_JumpAddress = {ID_PCAdd4[31:28], JumpAddress[25:0], 2'b00};
@@ -91,7 +91,7 @@ module Processor(
     wire [1:0] EX_RsFwdSel, EX_RtFwdSel;
     wire EX_Link;
     wire [1:0] EX_LinkRegDst;
-    wire EX_ALUSrcImm;
+    wire EX_ALUSrcSel;
     wire [4:0] EX_ALUOp;
     wire EX_Movn, EX_Movz;
     wire EX_LLSC;
@@ -99,7 +99,7 @@ module Processor(
     wire [4:0] EX_Rs, EX_Rt;
     wire EX_WantRsByEX, EX_NeedRsByEX, EX_WantRtByEX, EX_NeedRtByEX;
     wire EX_Trap, EX_TrapCond;
-    wire EX_CanErr, EX_EX_CanErr, EX_M_CanErr;
+    wire EX_CanErr, EX_EX_CanErr, EX_MEM_CanErr;
     wire EX_KernelMode;
     wire EX_ReverseEndian;
     wire EX_Exception_Stall;
@@ -115,26 +115,26 @@ module Processor(
     wire EX_Left, EX_Right;
 
     /*** MEM (Memory) Signals ***/
-    wire M_Stall, M_Stall_Controller;
-    wire M_LLSC;
-    wire M_MemRead, M_MemWrite, M_MemByte, M_MemHalf, M_MemSignExtend;
-    wire M_RegWrite, M_MemtoReg;
-    wire M_WriteDataFwdSel;
-    wire M_EXC_AdEL, M_EXC_AdES;
-    wire M_M_CanErr;
-    wire M_KernelMode;
-    wire M_ReverseEndian;
-    wire M_Trap, M_TrapCond;
-    wire M_EXC_Tr;
-    wire M_Exception_Flush;
-    wire [31:0] M_ALUResult, M_ReadData2_PR;
-    wire [4:0] M_RtRd;
-    wire [31:0] M_MemReadData;
-    wire [31:0] M_RestartPC;
-    wire M_IsBDS;
-    wire [31:0] M_WriteData_Pre;
-    wire M_Left, M_Right;
-    wire M_Exception_Stall;
+    wire MEM_Stall, MEM_Stall_Controller;
+    wire MEM_LLSC;
+    wire MEM_MemRead, MEM_MemWrite, MEM_MemByte, MEM_MemHalf, MEM_MemSignExtend;
+    wire MEM_RegWrite, MEM_MemtoReg;
+    wire MEM_WriteDataFwdSel;
+    wire MEM_EXC_AdEL, MEM_EXC_AdES;
+    wire MEM_MEM_CanErr;
+    wire MEM_KernelMode;
+    wire MEM_ReverseEndian;
+    wire MEM_Trap, MEM_TrapCond;
+    wire MEM_EXC_Tr;
+    wire MEM_Exception_Flush;
+    wire [31:0] MEM_ALUResult, MEM_ReadData2_PR;
+    wire [4:0] MEM_RtRd;
+    wire [31:0] MEM_MemReadData;
+    wire [31:0] MEM_RestartPC;
+    wire MEM_IsBDS;
+    wire [31:0] MEM_WriteData_Pre;
+    wire MEM_Left, MEM_Right;
+    wire MEM_Exception_Stall;
 
     /*** WB (Writeback) Signals ***/
     wire WB_Stall, WB_RegWrite;
@@ -150,187 +150,115 @@ module Processor(
     assign IF_IsBDS = ID_NextIsDelay;
     assign HAZ_DP_Hazards = {ID_DP_Hazards[7:4], EX_WantRsByEX, EX_NeedRsByEX, EX_WantRtByEX, EX_NeedRtByEX};
     assign IF_EXC_AdIF = IF_PCOut[1] | IF_PCOut[0];
-    assign ID_CanErr = ID_ID_CanErr | ID_EX_CanErr | ID_M_CanErr;
-    assign EX_CanErr = EX_EX_CanErr | EX_M_CanErr;
-    assign M_CanErr  = M_M_CanErr;
+    assign ID_CanErr = ID_ID_CanErr | ID_EX_CanErr | ID_MEM_CanErr;
+    assign EX_CanErr = EX_EX_CanErr | EX_MEM_CanErr;
+    assign MEM_CanErr  = MEM_MEM_CanErr;
 
     // External Memory Interface
     reg IRead, IReadMask;
+    // InstrMem Addresss & DataMem Address
     assign InstMem_Address = IF_PCOut[31:2];
-    assign DataMem_Address = M_ALUResult[31:2];
-    always @(posedge clock) begin
-        IRead <= (reset) ? 1 : ~InstMem_Ready;
-        IReadMask <= (reset) ? 0 : ((IRead & InstMem_Ready) ? 1 : ((~IF_Stall) ? 0 : IReadMask));
+    assign DataMem_Address = MEM_ALUResult[31:2];
+
+    // 
+    always @(posedge clk)
+    begin
+        IRead <= (rst) ? 1 : ~InstMem_Ready;
+        IReadMask <= (rst) ? 0 : ((IRead & InstMem_Ready) ? 1 : ((~IF_Stall) ? 0 : IReadMask));
     end
     assign InstMem_Read = IRead & ~IReadMask;
 
 
     /*** Datapath Controller ***/
     Control Controller (
+        /***   input  *****/
         .ID_Stall       (ID_Stall),
         .OpCode         (OpCode),
-        .Funct          (Funct),
-        .Rs             (Rs),
-        .Rt             (Rt),
-        .Cmp_EQ         (ID_CmpEQ),
-        .Cmp_GZ         (ID_CmpGZ),
-        .Cmp_GEZ        (ID_CmpGEZ),
-        .Cmp_LZ         (ID_CmpLZ),
-        .Cmp_LEZ        (ID_CmpLEZ),
+        .Func           (Func),
+        .Comp_EQ        (ID_CompEQ),
+
+        /***   Output  *****/
         .IF_Flush       (IF_Flush),
         .DP_Hazards     (ID_DP_Hazards),
-        .PCSrc          (ID_PCSrc),
-        .SignExtend     (ID_SignExtend),
+        .PCSrcSel       (ID_PCSrcSel),
+        .SignExt        (ID_SignExt),
         .Link           (ID_Link),
-        .Movn           (ID_Movn),
-        .Movz           (ID_Movz),
-        .Mfc0           (ID_Mfc0),
-        .Mtc0           (ID_Mtc0),
-        .CP1            (ID_CP1),
-        .CP2            (ID_CP2),
-        .CP3            (ID_CP3),
-        .Eret           (ID_Eret),
-        .Trap           (ID_Trap),
-        .TrapCond       (ID_TrapCond),
-        .EXC_Sys        (ID_EXC_Sys),
-        .EXC_Bp         (ID_EXC_Bp),
-        .EXC_RI         (ID_EXC_RI),
-        .ID_CanErr      (ID_ID_CanErr),
-        .EX_CanErr      (ID_EX_CanErr),
-        .M_CanErr       (ID_M_CanErr),
         .NextIsDelay    (ID_NextIsDelay),
-        .RegDst         (ID_RegDst),
-        .ALUSrcImm      (ID_ALUSrcImm),
+        .RegDest        (ID_RegDest),
+        .ALUSrcSel      (ID_ALUSrcSel),
         .ALUOp          (ID_ALUOp),
-        .LLSC           (ID_LLSC),
         .MemWrite       (ID_MemWrite),
         .MemRead        (ID_MemRead),
         .MemByte        (ID_MemByte),
         .MemHalf        (ID_MemHalf),
-        .MemSignExtend  (ID_MemSignExtend),
-        .Left           (ID_Left),
-        .Right          (ID_Right),
+        .MemSignExt     (ID_MemSignExt),
         .RegWrite       (ID_RegWrite),
         .MemtoReg       (ID_MemtoReg)
     );
 
     /*** Hazard and Forward Control Unit ***/
     Hazard_Detection HazardControl (
+        /***   input  *****/
         .DP_Hazards          (HAZ_DP_Hazards),
         .ID_Rs               (Rs),
         .ID_Rt               (Rt),
         .EX_Rs               (EX_Rs),
         .EX_Rt               (EX_Rt),
         .EX_RtRd             (EX_RtRd),
-        .MEM_RtRd            (M_RtRd),
+        .MEM_RtRd            (MEM_RtRd),
         .WB_RtRd             (WB_RtRd),
         .EX_Link             (EX_Link),
         .EX_RegWrite         (EX_RegWrite),
-        .MEM_RegWrite        (M_RegWrite),
+        .MEM_RegWrite        (MEM_RegWrite),
         .WB_RegWrite         (WB_RegWrite),
-        .MEM_MemRead         (M_MemRead),
-        .MEM_MemWrite        (M_MemWrite),
+        .MEM_MemRead         (MEM_MemRead),
+        .MEM_MemWrite        (MEM_MemWrite),
         .InstMem_Read        (InstMem_Read),
         .InstMem_Ready       (InstMem_Ready),
-        .Mfc0                (ID_Mfc0),
-        .IF_Exception_Stall  (IF_Exception_Stall),
-        .ID_Exception_Stall  (ID_Exception_Stall),
-        .EX_Exception_Stall  (EX_Exception_Stall),
         .EX_ALU_Stall        (EX_ALU_Stall),
-        .M_Stall_Controller  (M_Stall_Controller),
+        .MEM_Stall_Controller (MEM_Stall_Controller),
+
+        /***   output  *****/
         .IF_Stall            (IF_Stall),
         .ID_Stall            (ID_Stall),
         .EX_Stall            (EX_Stall),
-        .M_Stall             (M_Stall),
+        .MEM_Stall           (MEM_Stall),
         .WB_Stall            (WB_Stall),
         .ID_RsFwdSel         (ID_RsFwdSel),
         .ID_RtFwdSel         (ID_RtFwdSel),
         .EX_RsFwdSel         (EX_RsFwdSel),
         .EX_RtFwdSel         (EX_RtFwdSel),
-        .M_WriteDataFwdSel   (M_WriteDataFwdSel)
+        .MEMEM_WriteDataFwdSel   (MEM_WriteDataFwdSel)
     );
 
-    /*** Coprocessor 0: Exceptions and Interrupts ***/
-    /*
-    CPZero CP0 (
-        .clock               (clock),
-        .Mfc0                (ID_Mfc0),
-        .Mtc0                (ID_Mtc0),
-        .IF_Stall            (IF_Stall),
-        .ID_Stall            (ID_Stall),
-        .COP1                (ID_CP1),
-        .COP2                (ID_CP2),
-        .COP3                (ID_CP3),
-        .ERET                (ID_Eret),
-        .Rd                  (Rd),
-        .Sel                 (Cp0_Sel),
-        .Reg_In              (ID_ReadData2_End),
-        .Reg_Out             (CP0_RegOut),
-        .KernelMode          (ID_KernelMode),
-        .ReverseEndian       (ID_ReverseEndian),
-        .Int                 (Interrupts),
-        .reset               (reset),
-        .EXC_NMI             (NMI),
-        .EXC_AdIF            (IF_EXC_AdIF),
-        .EXC_AdEL            (M_EXC_AdEL),
-        .EXC_AdES            (M_EXC_AdES),
-        .EXC_Ov              (EX_EXC_Ov),
-        .EXC_Tr              (M_EXC_Tr),
-        .EXC_Sys             (ID_EXC_Sys),
-        .EXC_Bp              (ID_EXC_Bp),
-        .EXC_RI              (ID_EXC_RI),
-        .ID_RestartPC        (ID_RestartPC),
-        .EX_RestartPC        (EX_RestartPC),
-        .M_RestartPC         (M_RestartPC),
-        .ID_IsFlushed        (ID_IsFlushed),
-        .IF_IsBD             (IF_IsBDS),
-        .ID_IsBD             (ID_IsBDS),
-        .EX_IsBD             (EX_IsBDS),
-        .M_IsBD              (M_IsBDS),
-        .BadAddr_M           (M_ALUResult),
-        .BadAddr_IF          (IF_PCOut),
-        .ID_CanErr           (ID_CanErr),
-        .EX_CanErr           (EX_CanErr),
-        .M_CanErr            (M_CanErr),
-        .IF_Exception_Stall  (IF_Exception_Stall),
-        .ID_Exception_Stall  (ID_Exception_Stall),
-        .EX_Exception_Stall  (EX_Exception_Stall),
-        .M_Exception_Stall   (M_Exception_Stall),
-        .IF_Exception_Flush  (IF_Exception_Flush),
-        .ID_Exception_Flush  (ID_Exception_Flush),
-        .EX_Exception_Flush  (EX_Exception_Flush),
-        .M_Exception_Flush   (M_Exception_Flush),
-        .Exc_PC_Sel          (ID_PCSrc_Exc),
-        .Exc_PC_Out          (ID_ExceptionPC),
-        .IP                  (IP)
-    );
-	*/
+    
     /*** PC Source Non-Exception Mux ***/
     Mux4 #(.WIDTH(32)) PCSrcStd_Mux (
-        .sel  (ID_PCSrc),
+        .sel  (ID_PCSrcSel),
         .in0  (IF_PCAdd4),
         .in1  (ID_JumpAddress),
         .in2  (ID_BranchAddress),
         .in3  (ID_ReadData1_End),
-        .out  (IF_PC_PreExc)
+        .out  (IF_PCIn)
     );
-
+    
     /*** PC Source Exception Mux ***/
+    /*
     Mux2 #(.WIDTH(32)) PCSrcExc_Mux (
         .sel  (ID_PCSrc_Exc),
         .in0  (IF_PC_PreExc),
         .in1  (ID_ExceptionPC),
         .out  (IF_PCIn)
     );
+    */
 
     /*** Program Counter (MIPS spec is 0xBFC00000 starting address) ***/
     Register #(.WIDTH(32), .INIT(EXC_Vector_Base_Reset)) PC (
-        .clock   (clock),
-        .reset   (reset),
-        //.enable  (~IF_Stall),   // XXX verify. HERE. Was 1 but on stall latches PC+4, ad nauseum.
-        .enable (~(IF_Stall | ID_Stall)),
-        .D       (IF_PCIn),
-        .Q       (IF_PCOut)
+        .clk   (clk),
+        .rst   (rst),
+        .RegWrite   (~(IF_Stall | ID_Stall)),
+        .idat       (IF_PCIn),
+        .odat       (IF_PCOut)
     );
 
     /*** PC +4 Adder ***/
@@ -342,17 +270,21 @@ module Processor(
 
     /*** Instruction Fetch -> Instruction Decode Stage Register ***/
     IFID_Stage IFID (
-        .clock           (clock),
-        .reset           (reset),
-        .IF_Flush        (IF_Exception_Flush | IF_Flush),
+        /***   Input  *****/
+        .clk           (clk),
+        .rst           (rst),
+        .IF_Flush        (IF_Flush),
         .IF_Stall        (IF_Stall),
         .ID_Stall        (ID_Stall),
         .IF_Instruction  (IF_Instruction),
         .IF_PCAdd4       (IF_PCAdd4),
         .IF_PC           (IF_PCOut),
         .IF_IsBDS        (IF_IsBDS),
+
+        /***   Output  *****/
         .ID_Instruction  (Instruction),
         .ID_PCAdd4       (ID_PCAdd4),
+        // .ID_RestartPC (ID_PC),  => .ID_PC (ID_PC),
         .ID_RestartPC    (ID_RestartPC),
         .ID_IsBDS        (ID_IsBDS),
         .ID_IsFlushed    (ID_IsFlushed)
@@ -360,22 +292,25 @@ module Processor(
 
     /*** Register File ***/
     RegisterFile RegisterFile (
-        .clock      (clock),
-        .reset      (reset),
-        .ReadReg1   (Rs),
-        .ReadReg2   (Rt),
-        .WriteReg   (WB_RtRd),
-        .WriteData  (WB_WriteData),
+        /***   Input  *****/
+        .clk        (clk),
+        .rst        (rst),
+        .regA       (Rs),
+        .regB       (Rt),
+        .regW       (WB_RtRd),
+        .Wdat       (WB_WriteData),
         .RegWrite   (WB_RegWrite),
-        .ReadData1  (ID_ReadData1_RF),
-        .ReadData2  (ID_ReadData2_RF)
+
+        /***   Output  *****/
+        .Adat       (ID_ReadData1_Front),
+        .Bdat       (ID_ReadData2_Front)
     );
 
     /*** ID Rs Forwarding/Link Mux ***/
     Mux4 #(.WIDTH(32)) IDRsFwd_Mux (
         .sel  (ID_RsFwdSel),
-        .in0  (ID_ReadData1_RF),
-        .in1  (M_ALUResult),
+        .in0  (ID_ReadData1_Front),
+        .in1  (MEM_ALUResult),
         .in2  (WB_WriteData),
         .in3  (32'hxxxxxxxx),
         .out  (ID_ReadData1_End)
@@ -384,10 +319,10 @@ module Processor(
     /*** ID Rt Forwarding/CP0 Mfc0 Mux ***/
     Mux4 #(.WIDTH(32)) IDRtFwd_Mux (
         .sel  (ID_RtFwdSel),
-        .in0  (ID_ReadData2_RF),
-        .in1  (M_ALUResult),
+        .in0  (ID_ReadData2_Front),
+        .in1  (MEM_ALUResult),
         .in2  (WB_WriteData),
-        .in3  (CP0_RegOut),
+        .in3  (32'hxxxxxxxx),
         .out  (ID_ReadData2_End)
     );
 
@@ -395,11 +330,7 @@ module Processor(
     Compare Compare (
         .A    (ID_ReadData1_End),
         .B    (ID_ReadData2_End),
-        .EQ   (ID_CmpEQ),
-        .GZ   (ID_CmpGZ),
-        .LZ   (ID_CmpLZ),
-        .GEZ  (ID_CmpGEZ),
-        .LEZ  (ID_CmpLEZ)
+        .EQ   (ID_CompEQ)
     );
 
     /*** Branch Address Adder ***/
@@ -411,78 +342,56 @@ module Processor(
 
     /*** Instruction Decode -> Execute Pipeline Stage ***/
     IDEX_Stage IDEX (
-        .clock             (clock),
-        .reset             (reset),
-        .ID_Flush          (ID_Exception_Flush),
+        .clk             (clk),
+        .rst             (rst),
+        //.ID_Flush          (ID_Exception_Flush),
         .ID_Stall          (ID_Stall),
         .EX_Stall          (EX_Stall),
         .ID_Link           (ID_Link),
-        .ID_RegDst         (ID_RegDst),
-        .ID_ALUSrcImm      (ID_ALUSrcImm),
+        .ID_RegDest        (ID_RegDest),
+        .ID_ALUSrcSel      (ID_ALUSrcSel),
         .ID_ALUOp          (ID_ALUOp),
-        .ID_Movn           (ID_Movn),
-        .ID_Movz           (ID_Movz),
-        .ID_LLSC           (ID_LLSC),
         .ID_MemRead        (ID_MemRead),
         .ID_MemWrite       (ID_MemWrite),
         .ID_MemByte        (ID_MemByte),
         .ID_MemHalf        (ID_MemHalf),
-        .ID_MemSignExtend  (ID_MemSignExtend),
-        .ID_Left           (ID_Left),
-        .ID_Right          (ID_Right),
+        .ID_MemSignExt     (ID_MemSignExt),
         .ID_RegWrite       (ID_RegWrite),
         .ID_MemtoReg       (ID_MemtoReg),
-        .ID_ReverseEndian  (ID_ReverseEndian),
         .ID_Rs             (Rs),
         .ID_Rt             (Rt),
         .ID_WantRsByEX     (ID_DP_Hazards[3]),
         .ID_NeedRsByEX     (ID_DP_Hazards[2]),
         .ID_WantRtByEX     (ID_DP_Hazards[1]),
         .ID_NeedRtByEX     (ID_DP_Hazards[0]),
-        .ID_KernelMode     (ID_KernelMode),
         .ID_RestartPC      (ID_RestartPC),
         .ID_IsBDS          (ID_IsBDS),
-        .ID_Trap           (ID_Trap),
-        .ID_TrapCond       (ID_TrapCond),
-        .ID_EX_CanErr      (ID_EX_CanErr),
-        .ID_M_CanErr       (ID_M_CanErr),
         .ID_ReadData1      (ID_ReadData1_End),
         .ID_ReadData2      (ID_ReadData2_End),
         .ID_SignExtImm     (ID_SignExtImm[16:0]),
         //-----------------------------------------
         // Output
         .EX_Link           (EX_Link),
-        .EX_LinkRegDst     (EX_LinkRegDst),
-        .EX_ALUSrcImm      (EX_ALUSrcImm),
+        .EX_LinkRegDest    (EX_LinkRegDest),
+        .EX_ALUSrcSel      (EX_ALUSrcSel),
         .EX_ALUOp          (EX_ALUOp),
-        .EX_Movn           (EX_Movn),
-        .EX_Movz           (EX_Movz),
-        .EX_LLSC           (EX_LLSC),
         .EX_MemRead        (EX_MemRead),
         .EX_MemWrite       (EX_MemWrite),
         .EX_MemByte        (EX_MemByte),
         .EX_MemHalf        (EX_MemHalf),
-        .EX_MemSignExtend  (EX_MemSignExtend),
-        .EX_Left           (EX_Left),
-        .EX_Right          (EX_Right),
+        .EX_MemSignExt     (EX_MemSignExt),
         .EX_RegWrite       (EX_RegWrite),
         .EX_MemtoReg       (EX_MemtoReg),
-        .EX_ReverseEndian  (EX_ReverseEndian),
         .EX_Rs             (EX_Rs),
         .EX_Rt             (EX_Rt),
         .EX_WantRsByEX     (EX_WantRsByEX),
         .EX_NeedRsByEX     (EX_NeedRsByEX),
         .EX_WantRtByEX     (EX_WantRtByEX),
         .EX_NeedRtByEX     (EX_NeedRtByEX),
-        .EX_KernelMode     (EX_KernelMode),
         .EX_RestartPC      (EX_RestartPC),
         .EX_IsBDS          (EX_IsBDS),
-        .EX_Trap           (EX_Trap),
-        .EX_TrapCond       (EX_TrapCond),
-        .EX_EX_CanErr      (EX_EX_CanErr),
-        .EX_M_CanErr       (EX_M_CanErr),
-        .EX_ReadData1      (EX_ReadData1_PR),
-        .EX_ReadData2      (EX_ReadData2_PR),
+        .EX_ReadData1      (EX_ReadData1_Front),
+        .EX_ReadData2      (EX_ReadData2_Front),
         .EX_SignExtImm     (EX_SignExtImm),
         .EX_Rd             (EX_Rd),
         .EX_Shamt          (EX_Shamt)
@@ -491,8 +400,8 @@ module Processor(
     /*** EX Rs Forwarding Mux ***/
     Mux4 #(.WIDTH(32)) EXRsFwd_Mux (
         .sel  (EX_RsFwdSel),
-        .in0  (EX_ReadData1_PR),
-        .in1  (M_ALUResult),
+        .in0  (EX_ReadData1_Front),
+        .in1  (MEM_ALUResult),
         .in2  (WB_WriteData),
         .in3  (EX_RestartPC),
         .out  (EX_ReadData1_Fwd)
@@ -501,16 +410,16 @@ module Processor(
     /*** EX Rt Forwarding / Link Mux ***/
     Mux4 #(.WIDTH(32)) EXRtFwdLnk_Mux (
         .sel  (EX_RtFwdSel),
-        .in0  (EX_ReadData2_PR),
-        .in1  (M_ALUResult),
+        .in0  (EX_ReadData2_Front),
+        .in1  (MEM_ALUResult),
         .in2  (WB_WriteData),
         .in3  (32'h00000008),
         .out  (EX_ReadData2_Fwd)
     );
 
     /*** EX ALU Immediate Mux ***/
-    Mux2 #(.WIDTH(32)) EXALUImm_Mux (
-        .sel  (EX_ALUSrcImm),
+    Mux2 #(.WIDTH(32)) EXALUImMEM_Mux (
+        .sel  (EX_ALUSrcSel),
         .in0  (EX_ReadData2_Fwd),
         .in1  (EX_SignExtImm),
         .out  (EX_ReadData2_Imm)
@@ -518,7 +427,7 @@ module Processor(
 
     /*** EX RtRd / Link Mux ***/
     Mux4 #(.WIDTH(5)) EXRtRdLnk_Mux (
-        .sel  (EX_LinkRegDst),
+        .sel  (EX_LinkRegDest),
         .in0  (EX_Rt),
         .in1  (EX_Rd),
         .in2  (5'b11111),
@@ -527,133 +436,113 @@ module Processor(
     );
 
     /*** Arithmetic Logic Unit ***/
-    ALU ALU (
-        .clock      (clock),
-        .reset      (reset),
-        .EX_Stall   (EX_Stall),
-        .EX_Flush   (EX_Exception_Flush),
+    ALU_Unit ALU (
         .A          (EX_ReadData1_Fwd),
         .B          (EX_ReadData2_Imm),
-        .Operation  (EX_ALUOp),
+        .ALUOp  (EX_ALUOp),
         .Shamt      (EX_Shamt),
         .Result     (EX_ALUResult),
-        .BZero      (EX_BZero),
-        .EXC_Ov     (EX_EXC_Ov),
-        .ALU_Stall  (EX_ALU_Stall)
+        .Carry      (EX_Carry),
+        .OverFlow   (EX_OverFlow)
     );
 
     /*** Execute -> Memory Pipeline Stage ***/
     EXMEM_Stage EXMEM (
-        .clock             (clock),
-        .reset             (reset),
-        .EX_Flush          (EX_Exception_Flush),
+        /****  Input  ****/
+        .clk             (clk),
+        .rst             (rst),
+        //.EX_Flush          (EX_Exception_Flush),
         .EX_Stall          (EX_Stall),
-        .M_Stall           (M_Stall),
-        .EX_Movn           (EX_Movn),
-        .EX_Movz           (EX_Movz),
-        .EX_BZero          (EX_BZero),
+        .MEM_Stall         (MEM_Stall),
         .EX_RegWrite       (EX_RegWrite),
         .EX_MemtoReg       (EX_MemtoReg),
-        .EX_ReverseEndian  (EX_ReverseEndian),
-        .EX_LLSC           (EX_LLSC),
         .EX_MemRead        (EX_MemRead),
         .EX_MemWrite       (EX_MemWrite),
         .EX_MemByte        (EX_MemByte),
         .EX_MemHalf        (EX_MemHalf),
-        .EX_MemSignExtend  (EX_MemSignExtend),
-        .EX_Left           (EX_Left),
-        .EX_Right          (EX_Right),
-        .EX_KernelMode     (EX_KernelMode),
+        .EX_MemSignExt     (EX_MemSignExt),
         .EX_RestartPC      (EX_RestartPC),
         .EX_IsBDS          (EX_IsBDS),
-        .EX_Trap           (EX_Trap),
-        .EX_TrapCond       (EX_TrapCond),
-        .EX_M_CanErr       (EX_M_CanErr),
         .EX_ALU_Result     (EX_ALUResult),
         .EX_ReadData2      (EX_ReadData2_Fwd),
         .EX_RtRd           (EX_RtRd),
-        .M_RegWrite        (M_RegWrite),
-        .M_MemtoReg        (M_MemtoReg),
-        .M_ReverseEndian   (M_ReverseEndian),
-        .M_LLSC            (M_LLSC),
-        .M_MemRead         (M_MemRead),
-        .M_MemWrite        (M_MemWrite),
-        .M_MemByte         (M_MemByte),
-        .M_MemHalf         (M_MemHalf),
-        .M_MemSignExtend   (M_MemSignExtend),
-        .M_Left            (M_Left),
-        .M_Right           (M_Right),
-        .M_KernelMode      (M_KernelMode),
-        .M_RestartPC       (M_RestartPC),
-        .M_IsBDS           (M_IsBDS),
-        .M_Trap            (M_Trap),
-        .M_TrapCond        (M_TrapCond),
-        .M_M_CanErr        (M_M_CanErr),
-        .M_ALU_Result      (M_ALUResult),
-        .M_ReadData2       (M_ReadData2_PR),
-        .M_RtRd            (M_RtRd)
+        /****  Output   *****/
+        .MEM_RegWrite        (MEM_RegWrite),
+        .MEM_MemtoReg        (MEM_MemtoReg),
+        .MEM_MemRead         (MEM_MemRead),
+        .MEM_MemWrite        (MEM_MemWrite),
+        .MEM_MemByte         (MEM_MemByte),
+        .MEM_MemHalf         (MEM_MemHalf),
+        .MEM_MemSignExt      (MEM_MemSignExt),
+        .MEM_RestartPC       (MEM_RestartPC),
+        .MEM_IsBDS           (MEM_IsBDS),
+        .MEM_ALU_Result      (MEM_ALUResult),
+        .MEM_ReadData2       (MEM_ReadData2_Front),
+        .MEM_RtRd            (MEM_RtRd)
     );
 
     /*** Trap Detection Unit ***/
+    /*
     TrapDetect TrapDetect (
-        .Trap       (M_Trap),
-        .TrapCond   (M_TrapCond),
-        .ALUResult  (M_ALUResult),
-        .EXC_Tr     (M_EXC_Tr)
+        .Trap       (MEM_Trap),
+        .TrapCond   (MEM_TrapCond),
+        .ALUResult  (MEM_ALUResult),
+        .EXC_Tr     (MEM_EXC_Tr)
     );
+    */
 
     /*** MEM Write Data Mux ***/
     Mux2 #(.WIDTH(32)) MWriteData_Mux (
-        .sel  (M_WriteDataFwdSel),
-        .in0  (M_ReadData2_PR),
+        .sel  (MEM_WriteDataFwdSel),
+        .in0  (MEM_ReadData2_Front),
         .in1  (WB_WriteData),
-        .out  (M_WriteData_Pre)
+        .out  (MEM_WriteData)
     );
 
     /*** Data Memory Controller ***/
     MemControl DataMem_Controller (
-        .clock         (clock),
-        .reset         (reset),
-        .DataIn        (M_WriteData_Pre),
-        .Address       (M_ALUResult),
+        .clk         (clk),
+        .rst         (rst),
+        .DataIn        (MEM_WriteData),
+        .Address       (MEM_ALUResult),
         .MReadData     (DataMem_In),
-        .MemRead       (M_MemRead),
-        .MemWrite      (M_MemWrite),
+        .MemRead       (MEM_MemRead),
+        .MemWrite      (MEM_MemWrite),
         .DataMem_Ready (DataMem_Ready),
-        .Byte          (M_MemByte),
-        .Half          (M_MemHalf),
-        .SignExtend    (M_MemSignExtend),
-        .KernelMode    (M_KernelMode),
-        .ReverseEndian (M_ReverseEndian),
-        .LLSC          (M_LLSC),
+        .Byte          (MEM_MemByte),
+        .Half          (MEM_MemHalf),
+        .SignExtend    (MEM_MemSignExtend),
+        .KernelMode    (MEM_KernelMode),
+        .ReverseEndian (MEM_ReverseEndian),
+        .LLSC          (MEM_LLSC),
         .ERET          (ID_Eret),
-        .Left          (M_Left),
-        .Right         (M_Right),
-        .M_Exception_Stall (M_Exception_Stall),
+        .Left          (MEM_Left),
+        .Right         (MEM_Right),
+        .MEM_Exception_Stall (MEM_Exception_Stall),
         
         .IF_Stall (IF_Stall),
         
-        .DataOut       (M_MemReadData),
+        .DataOut       (MEM_MemReadData),
         .MWriteData    (DataMem_Out),
         .WriteEnable   (DataMem_Write),
         .ReadEnable    (DataMem_Read),
-        .M_Stall       (M_Stall_Controller),
-        .EXC_AdEL      (M_EXC_AdEL),
-        .EXC_AdES      (M_EXC_AdES)
+        .MEM_Stall       (MEM_Stall_Controller),
+        .EXC_AdEL      (MEM_EXC_AdEL),
+        .EXC_AdES      (MEM_EXC_AdES)
     );
 
     /*** Memory -> Writeback Pipeline Stage ***/
     MEMWB_Stage MEMWB (
-        .clock          (clock),
-        .reset          (reset),
-        .M_Flush        (M_Exception_Flush),
-        .M_Stall        (M_Stall),
+        .clk          (clk),
+        .rst          (rst),
+        //.MEM_Flush        (MEM_Exception_Flush),
+        .MEM_Stall      (MEM_Stall),
         .WB_Stall       (WB_Stall),
-        .M_RegWrite     (M_RegWrite),
-        .M_MemtoReg     (M_MemtoReg),
-        .M_ReadData     (M_MemReadData),
-        .M_ALU_Result   (M_ALUResult),
-        .M_RtRd         (M_RtRd),
+        .MEM_RegWrite     (MEM_RegWrite),
+        .MEM_MemtoReg     (MEM_MemtoReg),
+        .MEM_ReadData     (MEM_MemReadData),
+        .MEM_ALU_Result   (MEM_ALUResult),
+        .MEM_RtRd         (MEM_RtRd),
         .WB_RegWrite    (WB_RegWrite),
         .WB_MemtoReg    (WB_MemtoReg),
         .WB_ReadData    (WB_ReadData),
