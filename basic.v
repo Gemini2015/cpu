@@ -20,29 +20,21 @@
 ***/
 
 // 5 bits mux 2 - 1
-module MUX5_2_1(S, ctrl, A, B);
-    input[4:0]	A, B;
-	 input			ctrl;
-	 output[4:0]	S;
+module MUX5_4_1(
+	input[1:0]		sel,
+	input[4:0]		in0,in1,in2,in3,
+	output reg[4:0] out
+	);
 
-	wire [4:0]	ta, tb;
-	and(ta[0], A[0], ~ctrl);
-	and(ta[1], A[1], ~ctrl);
-	and(ta[2], A[2], ~ctrl);
-	and(ta[3], A[3], ~ctrl);
-	and(ta[4], A[4], ~ctrl);
-	
-	and(tb[0], B[0],  ctrl);
-	and(tb[1], B[1],  ctrl);
-	and(tb[2], B[2],  ctrl);
-	and(tb[3], B[3],  ctrl);
-	and(tb[4], B[4],  ctrl);
-
-	or(S[0], ta[0], tb[0]);
-	or(S[1], ta[1], tb[1]);
-	or(S[2], ta[2], tb[2]);
-	or(S[3], ta[3], tb[3]);
-	or(S[4], ta[4], tb[4]);
+	always @(*)
+	begin
+		case (sel)
+			2'b00:	out <= in0;
+			2'b01:	out <= in1;
+			2'b10:	out <= in2;
+			2'b11: 	out <= in3;
+		endcase
+	end
 endmodule
 
 // 8 bits mux 2 - 1
@@ -93,29 +85,33 @@ module MUX16_2_1(S, ctrl, A, B);
 endmodule
 
 // 32 bits mux 2 - 1
-module MUX32_2_1(S, ctrl, A, B);
-    input[31:0]	A, B;
-	 input			ctrl;
-	 output [31:0]	S;
+module MUX32_2_1(
+	input 			sel,
+	input[31:0] 	in0,
+	input[31:0] 	in1,
+	output[31:0]	out
+	);
 
-	wire [31:0]	ta, tb;
-	AND32_2 a1(ta, A, {32{~ctrl}});
-	AND32_2 a2(tb, B, {32{ ctrl}});
-	OR32_2  o1(S, ta, tb);
+	assign out = sel ? in1 : in0;
+    
 endmodule
 
 // 32 bits mux 4 - 1
-module MUX32_4_1(S, ctrl, A, B, C, D);
-    input[31:0]	A, B, C, D;
-	 input[1:0]		ctrl;
-	 output [31:0]	S;
+module MUX32_4_1(
+	input[1:0]		sel,
+	input[31:0]		in0,in1,in2,in3,
+	output reg[31:0] out
+	);
 
-	wire[31:0]	ta, tb, tc, td;
-	AND32_3 a31(ta, A, {32{~ctrl[1]}}, {32{~ctrl[0]}});
-	AND32_3 a32(tb, B, {32{~ctrl[1]}}, {32{ ctrl[0]}});
-	AND32_3 a33(tc, C, {32{ ctrl[1]}}, {32{~ctrl[0]}});
-	AND32_3 a34(td, D, {32{ ctrl[1]}}, {32{ ctrl[0]}});
-	OR32_4 o1(S, ta, tb, tc, td);
+	always @(*)
+	begin
+		case (sel)
+			2'b00:	out <= in0;
+			2'b01:	out <= in1;
+			2'b10:	out <= in2;
+			2'b11: 	out <= in3;
+		endcase
+	end
 endmodule
 
 // 16 bits and gate, 2 channels

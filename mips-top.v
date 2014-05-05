@@ -233,7 +233,7 @@ module Processor(
 
     
     /*** PC Source Non-Exception Mux ***/
-    MUX32_4_1 #(.WIDTH(32)) PCSrcStd_Mux (
+    MUX32_4_1  PCSrcStd_Mux (
         .sel  (ID_PCSrcSel),
         .in0  (IF_PCAdd4),
         .in1  (ID_JumpAddress),
@@ -241,19 +241,9 @@ module Processor(
         .in3  (ID_ReadData1_End),
         .out  (IF_PCIn)
     );
-    
-    /*** PC Source Exception Mux ***/
-    /*
-    MUX32_2_1 #(.WIDTH(32)) PCSrcExc_Mux (
-        .sel  (ID_PCSrc_Exc),
-        .in0  (IF_PC_PreExc),
-        .in1  (ID_ExceptionPC),
-        .out  (IF_PCIn)
-    );
-    */
 
-    /*** Program Counter (MIPS spec is 0xBFC00000 starting address) ***/
-    Register #(.WIDTH(32), .INIT(EXC_Vector_Base_Reset)) PC (
+    /*** Program Counter ***/
+    Register PC (
         .clk   (clk),
         .rst   (rst),
         .RegWrite   (~(IF_Stall | ID_Stall)),
@@ -307,7 +297,7 @@ module Processor(
     );
 
     /*** ID Rs Forwarding/Link Mux ***/
-    MUX32_4_1 #(.WIDTH(32)) IDRsFwd_Mux (
+    MUX32_4_1  IDRsFwd_Mux (
         .sel  (ID_RsFwdSel),
         .in0  (ID_ReadData1_Front),
         .in1  (MEM_ALUResult),
@@ -317,7 +307,7 @@ module Processor(
     );
 
     /*** ID Rt Forwarding/CP0 Mfc0 Mux ***/
-    MUX32_4_1 #(.WIDTH(32)) IDRtFwd_Mux (
+    MUX32_4_1  IDRtFwd_Mux (
         .sel  (ID_RtFwdSel),
         .in0  (ID_ReadData2_Front),
         .in1  (MEM_ALUResult),
@@ -341,7 +331,7 @@ module Processor(
     );
 
     /*** Instruction Decode -> Execute Pipeline Stage ***/
-    IDEXE_Stage IDEX (
+    IDEXE_Stage IDEXE (
         .clk             (clk),
         .rst             (rst),
         //.ID_Flush          (ID_Exception_Flush),
@@ -398,7 +388,7 @@ module Processor(
     );
 
     /*** EX Rs Forwarding Mux ***/
-    MUX32_4_1 #(.WIDTH(32)) EXRsFwd_Mux (
+    MUX32_4_1  EXRsFwd_Mux (
         .sel  (EX_RsFwdSel),
         .in0  (EX_ReadData1_Front),
         .in1  (MEM_ALUResult),
@@ -408,7 +398,7 @@ module Processor(
     );
 
     /*** EX Rt Forwarding / Link Mux ***/
-    MUX32_4_1 #(.WIDTH(32)) EXRtFwdLnk_Mux (
+    MUX32_4_1  EXRtFwdLnk_Mux (
         .sel  (EX_RtFwdSel),
         .in0  (EX_ReadData2_Front),
         .in1  (MEM_ALUResult),
@@ -418,7 +408,7 @@ module Processor(
     );
 
     /*** EX ALU Immediate Mux ***/
-    MUX32_2_1 #(.WIDTH(32)) EXALUImMEM_Mux (
+    MUX32_2_1  EXALUImMEM_Mux (
         .sel  (EX_ALUSrcSel),
         .in0  (EX_ReadData2_Fwd),
         .in1  (EX_SignExtImm),
@@ -426,7 +416,7 @@ module Processor(
     );
 
     /*** EX RtRd / Link Mux ***/
-    MUX32_4_1 #(.WIDTH(5)) EXRtRdLnk_Mux (
+    MUX5_4_1 EXRtRdLnk_Mux (
         .sel  (EX_LinkRegDest),
         .in0  (EX_Rt),
         .in1  (EX_Rd),
@@ -439,7 +429,7 @@ module Processor(
     ALU_Unit ALU (
         .A          (EX_ReadData1_Fwd),
         .B          (EX_ReadData2_Imm),
-        .ALUOp  (EX_ALUOp),
+        .ALUOp      (EX_ALUOp),
         .Shamt      (EX_Shamt),
         .Result     (EX_ALUResult),
         .Carry      (EX_Carry),
@@ -481,18 +471,8 @@ module Processor(
         .MEM_RtRd            (MEM_RtRd)
     );
 
-    /*** Trap Detection Unit ***/
-    /*
-    TrapDetect TrapDetect (
-        .Trap       (MEM_Trap),
-        .TrapCond   (MEM_TrapCond),
-        .ALUResult  (MEM_ALUResult),
-        .EXC_Tr     (MEM_EXC_Tr)
-    );
-    */
-
     /*** MEM Write Data Mux ***/
-    MUX32_2_1 #(.WIDTH(32)) MWriteData_Mux (
+    MUX32_2_1  MWriteData_Mux (
         .sel  (MEM_WriteDataFwdSel),
         .in0  (MEM_ReadData2_Front),
         .in1  (WB_WriteData),
@@ -501,34 +481,24 @@ module Processor(
 
     /*** Data Memory Controller ***/
     MemControl DataMem_Controller (
-        .clk         (clk),
-        .rst         (rst),
-        .DataIn        (MEM_WriteData),
-        .Address       (MEM_ALUResult),
-        .MReadData     (DataMem_In),
-        .MemRead       (MEM_MemRead),
-        .MemWrite      (MEM_MemWrite),
-        .DataMem_Ready (DataMem_Ready),
-        .Byte          (MEM_MemByte),
-        .Half          (MEM_MemHalf),
-        .SignExtend    (MEM_MemSignExtend),
-        .KernelMode    (MEM_KernelMode),
-        .ReverseEndian (MEM_ReverseEndian),
-        .LLSC          (MEM_LLSC),
-        .ERET          (ID_Eret),
-        .Left          (MEM_Left),
-        .Right         (MEM_Right),
-        .MEM_Exception_Stall (MEM_Exception_Stall),
+        .clk            (clk),
+        .rst            (rst),
+        .DataFromCPU    (MEM_WriteData),
+        .Address        (MEM_ALUResult),
+        .DataFromMem    (DataMem_In),
+        .MemReadFromCPU (MEM_MemRead),
+        .MemWriteFromCPU  (MEM_MemWrite),
+        .MemReadyFromMem  (DataMem_Ready),
+        .Byte           (MEM_MemByte),
+        .Half           (MEM_MemHalf),
+        .SignExt        (MEM_MemSignExtend),
+        .IF_Stall       (IF_Stall),
         
-        .IF_Stall (IF_Stall),
-        
-        .DataOut       (MEM_MemReadData),
-        .MWriteData    (DataMem_Out),
-        .WriteEnable   (DataMem_Write),
-        .ReadEnable    (DataMem_Read),
-        .MEM_Stall       (MEM_Stall_Controller),
-        .EXC_AdEL      (MEM_EXC_AdEL),
-        .EXC_AdES      (MEM_EXC_AdES)
+        .DataToCPU      (MEM_MemReadData),
+        .DataToMem      (DataMem_Out),
+        .WriteEnable    (DataMem_Write),
+        .ReadEnable     (DataMem_Read),
+        .MEM_Stall      (MEM_Stall_Controller)
     );
 
     /*** Memory -> Writeback Pipeline Stage ***/
@@ -551,7 +521,7 @@ module Processor(
     );
 
     /*** WB MemtoReg Mux ***/
-    MUX32_2_1 #(.WIDTH(32)) WBMemtoReg_Mux (
+    MUX32_2_1  WBMemtoReg_Mux (
         .sel  (WB_MemtoReg),
         .in0  (WB_ALUResult),
         .in1  (WB_ReadData),
