@@ -233,7 +233,7 @@ module Processor(
 
     
     /*** PC Source Non-Exception Mux ***/
-    Mux4 #(.WIDTH(32)) PCSrcStd_Mux (
+    MUX32_4_1 #(.WIDTH(32)) PCSrcStd_Mux (
         .sel  (ID_PCSrcSel),
         .in0  (IF_PCAdd4),
         .in1  (ID_JumpAddress),
@@ -244,7 +244,7 @@ module Processor(
     
     /*** PC Source Exception Mux ***/
     /*
-    Mux2 #(.WIDTH(32)) PCSrcExc_Mux (
+    MUX32_2_1 #(.WIDTH(32)) PCSrcExc_Mux (
         .sel  (ID_PCSrc_Exc),
         .in0  (IF_PC_PreExc),
         .in1  (ID_ExceptionPC),
@@ -262,7 +262,7 @@ module Processor(
     );
 
     /*** PC +4 Adder ***/
-    Add PC_Add4 (
+    PCAdder PC_Add4 (
         .A  (IF_PCOut),
         .B  (32'h00000004),
         .C  (IF_PCAdd4)
@@ -307,7 +307,7 @@ module Processor(
     );
 
     /*** ID Rs Forwarding/Link Mux ***/
-    Mux4 #(.WIDTH(32)) IDRsFwd_Mux (
+    MUX32_4_1 #(.WIDTH(32)) IDRsFwd_Mux (
         .sel  (ID_RsFwdSel),
         .in0  (ID_ReadData1_Front),
         .in1  (MEM_ALUResult),
@@ -317,7 +317,7 @@ module Processor(
     );
 
     /*** ID Rt Forwarding/CP0 Mfc0 Mux ***/
-    Mux4 #(.WIDTH(32)) IDRtFwd_Mux (
+    MUX32_4_1 #(.WIDTH(32)) IDRtFwd_Mux (
         .sel  (ID_RtFwdSel),
         .in0  (ID_ReadData2_Front),
         .in1  (MEM_ALUResult),
@@ -327,21 +327,21 @@ module Processor(
     );
 
     /*** Condition Compare Unit ***/
-    Compare Compare (
+    Compare32 Compare (
         .A    (ID_ReadData1_End),
         .B    (ID_ReadData2_End),
         .EQ   (ID_CompEQ)
     );
 
     /*** Branch Address Adder ***/
-    Add BranchAddress_Add (
+    PCAdder BranchAddress_Add (
         .A  (ID_PCAdd4),
         .B  (ID_ImmLeftShift2),
         .C  (ID_BranchAddress)
     );
 
     /*** Instruction Decode -> Execute Pipeline Stage ***/
-    IDEX_Stage IDEX (
+    IDEXE_Stage IDEX (
         .clk             (clk),
         .rst             (rst),
         //.ID_Flush          (ID_Exception_Flush),
@@ -398,7 +398,7 @@ module Processor(
     );
 
     /*** EX Rs Forwarding Mux ***/
-    Mux4 #(.WIDTH(32)) EXRsFwd_Mux (
+    MUX32_4_1 #(.WIDTH(32)) EXRsFwd_Mux (
         .sel  (EX_RsFwdSel),
         .in0  (EX_ReadData1_Front),
         .in1  (MEM_ALUResult),
@@ -408,7 +408,7 @@ module Processor(
     );
 
     /*** EX Rt Forwarding / Link Mux ***/
-    Mux4 #(.WIDTH(32)) EXRtFwdLnk_Mux (
+    MUX32_4_1 #(.WIDTH(32)) EXRtFwdLnk_Mux (
         .sel  (EX_RtFwdSel),
         .in0  (EX_ReadData2_Front),
         .in1  (MEM_ALUResult),
@@ -418,7 +418,7 @@ module Processor(
     );
 
     /*** EX ALU Immediate Mux ***/
-    Mux2 #(.WIDTH(32)) EXALUImMEM_Mux (
+    MUX32_2_1 #(.WIDTH(32)) EXALUImMEM_Mux (
         .sel  (EX_ALUSrcSel),
         .in0  (EX_ReadData2_Fwd),
         .in1  (EX_SignExtImm),
@@ -426,7 +426,7 @@ module Processor(
     );
 
     /*** EX RtRd / Link Mux ***/
-    Mux4 #(.WIDTH(5)) EXRtRdLnk_Mux (
+    MUX32_4_1 #(.WIDTH(5)) EXRtRdLnk_Mux (
         .sel  (EX_LinkRegDest),
         .in0  (EX_Rt),
         .in1  (EX_Rd),
@@ -447,7 +447,7 @@ module Processor(
     );
 
     /*** Execute -> Memory Pipeline Stage ***/
-    EXMEM_Stage EXMEM (
+    EXEMEM_Stage EXMEM (
         /****  Input  ****/
         .clk             (clk),
         .rst             (rst),
@@ -492,7 +492,7 @@ module Processor(
     */
 
     /*** MEM Write Data Mux ***/
-    Mux2 #(.WIDTH(32)) MWriteData_Mux (
+    MUX32_2_1 #(.WIDTH(32)) MWriteData_Mux (
         .sel  (MEM_WriteDataFwdSel),
         .in0  (MEM_ReadData2_Front),
         .in1  (WB_WriteData),
@@ -551,7 +551,7 @@ module Processor(
     );
 
     /*** WB MemtoReg Mux ***/
-    Mux2 #(.WIDTH(32)) WBMemtoReg_Mux (
+    MUX32_2_1 #(.WIDTH(32)) WBMemtoReg_Mux (
         .sel  (WB_MemtoReg),
         .in0  (WB_ALUResult),
         .in1  (WB_ReadData),

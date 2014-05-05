@@ -163,6 +163,16 @@ module Adder32(A, B, Cin, m, S, Carry, OverFlow);
 
 endmodule
 
+module PCAdder(
+	input[31:0] a,
+	input[31:0] b,
+	output[31:0] res
+	);
+
+	res = a + b;
+
+endmodule
+
 module Adder8(A, B, Cin, m, S, Carry, OverFlow);
     input [7:0]	A, B;
 	input			Cin, m;

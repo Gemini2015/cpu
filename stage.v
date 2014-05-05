@@ -16,7 +16,7 @@
 `include "cpu_para.v"
 
 //IF/ID stage
-module IFID(
+module IFID_Stage(
 	input  clk,
     input  rst,
     input  IF_Flush,		//IF flush signal
@@ -48,7 +48,7 @@ endmodule
 
 
 //ID/EXE stage
-module IDEXE(
+module IDEXE_Stage(
 	input  clk,
     input  rst,
     input  ID_Flush,
@@ -152,7 +152,7 @@ module IDEXE(
 endmodule
 
 //EXE/MEM stage
-module EXEMEM(
+module EXEMEM_Stage(
     input  clk,
     input  rst,
     input  EX_Flush,
@@ -212,7 +212,7 @@ module EXEMEM(
 endmodule
 
 //MEM/WB stage
-module MEMWB(
+module MEMWB_Stage(
     input  clk,
     input  rst,
     input  MEM_Flush,
