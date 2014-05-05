@@ -30,7 +30,7 @@ module RegFile(clk, rst, regA, regB, regW, Wdat, RegWrite, Adat, Bdat);
    	output [31:0] Adat, Bdat;
 
    	reg [31:0] iRegf[31:0];
-   	interger i;
+   	integer i;
 
 	assign Adat = iRegf[regA];
 	assign Bdat = iRegf[regB];

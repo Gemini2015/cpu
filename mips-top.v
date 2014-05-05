@@ -8,7 +8,12 @@
 *	2014-4-22
 *
 ***/
+
+`ifndef MIPS_PARA
+
 `include "cpu_para.v"
+
+`endif
 
 module Processor(
 	input  clk,
@@ -26,10 +31,12 @@ module Processor(
     output DataMem_Read, 
     output [3:0]  DataMem_Write,        // 4-bit Write, one for each byte in word.
     output [`ADDR_WIDTH - 1:0] DataMem_Address,      // Addresses are words, not bytes. 30 bits, require external shifter
-    output [`DP_WIDTH - 1:0] DataMem_Out,
+    output [`DP_WIDTH - 1:0] DataMem_Out
     //output [7:0] IP                     // Pending interrupts (diagnostic)
     );
-
+	
+	`include "cpu_para.v"
+	
 	/*** MIPS Instruction and Components (ID Stage) ***/
     wire [`DP_WIDTH - 1:0] Instruction;
     wire [`OPCODE_WIDTH - 1:0]  OpCode = Instruction[31:26];
@@ -228,7 +235,7 @@ module Processor(
         .ID_RtFwdSel         (ID_RtFwdSel),
         .EX_RsFwdSel         (EX_RsFwdSel),
         .EX_RtFwdSel         (EX_RtFwdSel),
-        .MEMEM_WriteDataFwdSel   (MEM_WriteDataFwdSel)
+        .MEM_WriteDataFwdSel   (MEM_WriteDataFwdSel)
     );
 
     
@@ -253,9 +260,9 @@ module Processor(
 
     /*** PC +4 Adder ***/
     PCAdder PC_Add4 (
-        .A  (IF_PCOut),
-        .B  (32'h00000004),
-        .C  (IF_PCAdd4)
+        .a  (IF_PCOut),
+        .b  (32'h00000004),
+        .res  (IF_PCAdd4)
     );
 
     /*** Instruction Fetch -> Instruction Decode Stage Register ***/
@@ -281,7 +288,7 @@ module Processor(
     );
 
     /*** Register File ***/
-    RegisterFile RegisterFile (
+    RegFile RegisterFile (
         /***   Input  *****/
         .clk        (clk),
         .rst        (rst),
@@ -325,9 +332,9 @@ module Processor(
 
     /*** Branch Address Adder ***/
     PCAdder BranchAddress_Add (
-        .A  (ID_PCAdd4),
-        .B  (ID_ImmLeftShift2),
-        .C  (ID_BranchAddress)
+        .a  (ID_PCAdd4),
+        .b  (ID_ImmLeftShift2),
+        .res  (ID_BranchAddress)
     );
 
     /*** Instruction Decode -> Execute Pipeline Stage ***/

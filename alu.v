@@ -21,7 +21,11 @@
 *
 *
 ***/
+`ifndef MIPS_PARA
+
 `include "cpu_para.v"
+
+`endif
 
 /*
 *
@@ -88,6 +92,7 @@ endmodule
 *	Decode Instruction Op_code and Func_code
 *
 **/
+/*
 module ALU_Controller(
 	input[`OPCODE_WIDTH - 1:0] op_code,
 	input[`FUNCCODE_WIDTH - 1:0] func_code,
@@ -143,10 +148,10 @@ module ALU_Controller(
 	end
 
 endmodule
-
+*/
 // 32 bit adder
 //对于有符号数，需要考察 OverFlow
-//对于无符号数，忽略 OverFlow
+//对于无符号数，忽�OverFlow
 module Adder32(A, B, Cin, m, S, Carry, OverFlow);
     
     input[31:0]	A, B;
@@ -169,7 +174,7 @@ module PCAdder(
 	output[31:0] res
 	);
 
-	res = a + b;
+	assign res = a + b;
 
 endmodule
 
@@ -232,7 +237,7 @@ module Adder4(A, B, Cin, m, S, Carry, OverFlow);
 	and(x4, p[3],p[2],p[1],p[0],Cin);
 	or (Carry, g[3], x1, x2, x3, x4);//c4=g3+p3g2+p3p2g1+p3p2p1g0+p3p2p1p0c0
 	//溢出的进位判断法
-	//符号位向前产生的进位值与尾数最高位向前产生的进位值相异时，才会溢出
+	//符号位向前产生的进位值与尾数最高位向前产生的进位值相异时，才会溢�
 	xor(OverFlow, w4, Carry);
 	
 endmodule
@@ -248,7 +253,7 @@ endmodule
 module Compare32(
 	input[`DP_WIDTH - 1:0] A,
 	input[`DP_WIDTH - 1:0] B,
-	output EQ,
+	output EQ
 	);
 	
 	assign EQ = (A == B);

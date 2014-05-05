@@ -9,7 +9,11 @@
 *	2014-4-26
 *
 ***/
+`ifndef MIPS_PARA
+
 `include "cpu_para.v"
+
+`endif
 
 module Control(
     input  ID_Stall,
@@ -37,13 +41,15 @@ module Control(
     output MemtoReg
     );
 
+	
+	
 	//wire Movc;
     wire Branch, Branch_EQ, Branch_NEQ;//, Branch_GTZ, Branch_LEZ, Branch_NEQ, Branch_GEZ, Branch_LTZ;
    	//wire Unaligned_Mem;
     
     reg [`CTLBUS_WIDTH - 1:0] CtlBus;
     //
-    assign PCSrc[0]      = CtlBus[10];
+    assign PCSrcSel[0]      = CtlBus[10];
     assign Link          = CtlBus[9];
     assign ALUSrcSel     = CtlBus[8];
     assign RegDst        = CtlBus[7];
@@ -63,11 +69,11 @@ module Control(
     		CtlBus <= CB_None;
     	else
 		begin
-			case(op_code)
+			case(OpCode)
 				// R type Instruction
 				Op_Type_R:
 				begin
-					case(func_code)
+					case(Func)
 						Func_Add 	: CtlBus <= CB_Add;
 						Func_Addu	: CtlBus <= CB_Addu;
 						Func_And	: CtlBus <= CB_And;
@@ -112,11 +118,11 @@ module Control(
 	// Hazard detection
 	always @(*)
     begin
-		case(op_code)
+		case(OpCode)
 			// R type Instruction
 			Op_Type_R:
 			begin
-				case(func_code)
+				case(Func)
 					Func_Add 	: DP_Hazards <= HZ_Add;
 					Func_Addu	: DP_Hazards <= HZ_Addu;
 					Func_And	: DP_Hazards <= HZ_And;
@@ -160,11 +166,11 @@ module Control(
     // ALU Control signal
     always@(*)
 	begin
-		case(op_code)
+		case(OpCode)
 			// R type Instruction
 			Op_Type_R:
 			begin
-				case(func_code)
+				case(Func)
 					Func_Add 	: ALUOp <= AluOp_Add;
 					Func_Addu	: ALUOp <= AluOp_Addu;
 					Func_And	: ALUOp <= AluOp_And;

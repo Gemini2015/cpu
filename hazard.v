@@ -8,7 +8,11 @@
 *   2014-4-26
 *
 ***/
+`ifndef MIPS_PARA
+
 `include "cpu_para.v"
+
+`endif
 
 module Hazard_Detection(
     input  [`HAZARD_WIDTH - 1:0] DP_Hazards,
@@ -29,7 +33,7 @@ module Hazard_Detection(
     input  InstMem_Read,
     input  InstMem_Ready,
     
-    input  EX_ALU_Stall;
+    input  EX_ALU_Stall,
     input  MEM_Stall_Controller,  // Determined by data memory controller
 
     // ----- Output ---------
@@ -147,7 +151,7 @@ module Hazard_Detection(
 
     // Stalls and Control Flow Final Assignments    
     assign WB_Stall = MEM_Stall;
-    assign MEM_Stall = IF_Stall | M_Stall_Controller;
+    assign MEM_Stall = IF_Stall | MEM_Stall_Controller;
     assign EX_Stall = (EX_Stall_1 | EX_Stall_2 ) | EX_ALU_Stall | MEM_Stall;
     assign ID_Stall = (ID_Stall_1 | ID_Stall_2 | ID_Stall_3 | ID_Stall_4 ) | EX_Stall;
     assign IF_Stall = InstMem_Read | InstMem_Ready;

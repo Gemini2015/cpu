@@ -8,7 +8,11 @@
 *	2014-5-5
 *
 ***/
+`ifndef MIPS_PARA
+
 `include "cpu_para.v"
+
+`endif
 
 module MemControl(
 	/**********  Input ***********/
@@ -30,7 +34,7 @@ module MemControl(
     output [`DP_WIDTH:0] DataToMem,       // Data to Memory
     output reg[3:0] WriteEnable,   // Write Enable to Memory for each of 4 bytes of Memory
     output ReadEnable,              // Read Enable to Memory
-    output M_Stall
+    output MEM_Stall
     );
     
     /*** Indicator that the current memory reference must be word-aligned ***/
@@ -38,11 +42,11 @@ module MemControl(
     
     reg RW_Mask;
     always @(posedge clk) begin
-        RW_Mask <= (rst) ? 0 : (((MemWriteFromCPU | MemReadFromCPU) & MemReadyFromMem) ? 1 : ((~M_Stall & ~IF_Stall) ? 0 : RW_Mask));
+        RW_Mask <= (rst) ? 0 : (((MemWriteFromCPU | MemReadFromCPU) & MemReadyFromMem) ? 1 : ((~MEM_Stall & ~IF_Stall) ? 0 : RW_Mask));
     end
 
-    assign M_Stall = ReadEnable | (WriteEnable != 4'b0000) | DataMem_Ready;
-    assign ReadEnable  = MemRead  & ~RW_Mask;
+    assign MEM_Stall = ReadEnable | (WriteEnable != 4'b0000) | MemReadyFromMem;
+    assign ReadEnable  = MemReadFromCPU  & ~RW_Mask;
     
     wire Half_Access_L  = Address[1];
     wire Half_Access_R  = ~Address[1];

@@ -14,6 +14,8 @@
 
 ***/
 
+`define MIPS_PARA
+
 `define DP_WIDTH 32
 `define ADDR_WIDTH 30
 `define HALF_DP_WIDTH 16
