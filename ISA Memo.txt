@@ -145,6 +145,12 @@ op = 0, func = 8, PC = s
 ======================================================
 
 Log:
+2014-5-5
+加入MemControl存储器控制模块，实现与外部数据存储器的接口。
+CPU对DataMem提供29位的Address，MemControl对DataMem提供4位的WriteEnable信号以及1位的ReadEnable信号。
+
+因为CPU只提供29位Address，故只能按字寻址，同时配合WriteEnable可以实现Byte、Half、Word的存取。
+
 2014-4-11
 添加指令的 op, func, 以及功能
 
