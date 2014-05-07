@@ -39,9 +39,9 @@ module IFID_Stage(
 	always @(posedge clk) begin
         ID_Instruction <= (rst) ? 32'b0 : ((ID_Stall) ? ID_Instruction : ((IF_Stall | IF_Flush) ? 32'b0 : IF_Instruction));
         ID_PCAdd4      <= (rst) ? 32'b0 : ((ID_Stall) ? ID_PCAdd4                                       : IF_PCAdd4);
-        ID_IsBDS       <= (rst) ? 0     : ((ID_Stall) ? ID_IsBDS                                        : IF_IsBDS);
+        ID_IsBDS       <= (rst) ? 1'b0     : ((ID_Stall) ? ID_IsBDS                                        : IF_IsBDS);
         ID_RestartPC   <= (rst) ? 32'b0 : ((ID_Stall | IF_IsBDS) ? ID_RestartPC                         : IF_PC);
-        ID_IsFlushed   <= (rst) ? 0     : ((ID_Stall) ? ID_IsFlushed                                    : IF_Flush);
+        ID_IsFlushed   <= (rst) ? 1'b0     : ((ID_Stall) ? ID_IsFlushed                                    : IF_Flush);
     end
 
 endmodule
@@ -103,13 +103,13 @@ module IDEXE_Stage(
     output reg EX_NeedRsByEX,
     output reg EX_WantRtByEX,
     output reg EX_NeedRtByEX,
-    output reg EX_KernelMode,
+    
     output reg [`DP_WIDTH - 1:0] EX_RestartPC,
     output reg EX_IsBDS,
     
     output reg [`DP_WIDTH - 1:0] EX_ReadData1,
     output reg [`DP_WIDTH - 1:0] EX_ReadData2,
-    output [`HALF_DP_WIDTH - 1:0] EX_SignExtImm,
+    output [`DP_WIDTH - 1:0] EX_SignExtImm,
     output [`REG_WIDTH - 1:0]      EX_Rd,
     output [`REG_WIDTH - 1:0]      EX_Shamt
     );
@@ -125,28 +125,28 @@ module IDEXE_Stage(
     
     always @(posedge clk) 
     begin
-        EX_Link           <= (rst) ? 0     : ((EX_Stall) ? EX_Link                                       : ID_Link);
-        EX_RegDest         <= (rst) ? 0     : ((EX_Stall) ? EX_RegDest                                     : ID_RegDest);
-        EX_ALUSrcSel      <= (rst) ? 0     : ((EX_Stall) ? EX_ALUSrcSel                                  : ID_ALUSrcSel);
-        EX_ALUOp          <= (rst) ? 5'b0  : ((EX_Stall) ? EX_ALUOp         : ((ID_Stall | ID_Flush) ? 5'b0 : ID_ALUOp));
-        EX_MemRead        <= (rst) ? 0     : ((EX_Stall) ? EX_MemRead       : ((ID_Stall | ID_Flush) ? 0 : ID_MemRead));
-        EX_MemWrite       <= (rst) ? 0     : ((EX_Stall) ? EX_MemWrite      : ((ID_Stall | ID_Flush) ? 0 : ID_MemWrite));
-        EX_MemByte        <= (rst) ? 0     : ((EX_Stall) ? EX_MemByte                                    : ID_MemByte);
-        EX_MemHalf        <= (rst) ? 0     : ((EX_Stall) ? EX_MemHalf                                    : ID_MemHalf);
-        EX_MemSignExt     <= (rst) ? 0     : ((EX_Stall) ? EX_MemSignExt                                 : ID_MemSignExt);
-        EX_RegWrite       <= (rst) ? 0     : ((EX_Stall) ? EX_RegWrite      : ((ID_Stall | ID_Flush) ? 0 : ID_RegWrite));
-        EX_MemtoReg       <= (rst) ? 0     : ((EX_Stall) ? EX_MemtoReg                                   : ID_MemtoReg);
+        EX_Link           <= (rst) ? 1'b0     : ((EX_Stall) ? EX_Link                                       : ID_Link);
+        EX_RegDest         <= (rst) ? 1'b0     : ((EX_Stall) ? EX_RegDest                                     : ID_RegDest);
+        EX_ALUSrcSel      <= (rst) ? 1'b0     : ((EX_Stall) ? EX_ALUSrcSel                                  : ID_ALUSrcSel);
+        EX_ALUOp          <= (rst) ? 4'b0  : ((EX_Stall) ? EX_ALUOp         : ((ID_Stall | ID_Flush) ? 4'b0 : ID_ALUOp));
+        EX_MemRead        <= (rst) ? 1'b0     : ((EX_Stall) ? EX_MemRead       : ((ID_Stall | ID_Flush) ? 1'b0 : ID_MemRead));
+        EX_MemWrite       <= (rst) ? 1'b0     : ((EX_Stall) ? EX_MemWrite      : ((ID_Stall | ID_Flush) ? 1'b0 : ID_MemWrite));
+        EX_MemByte        <= (rst) ? 1'b0     : ((EX_Stall) ? EX_MemByte                                    : ID_MemByte);
+        EX_MemHalf        <= (rst) ? 1'b0     : ((EX_Stall) ? EX_MemHalf                                    : ID_MemHalf);
+        EX_MemSignExt     <= (rst) ? 1'b0     : ((EX_Stall) ? EX_MemSignExt                                 : ID_MemSignExt);
+        EX_RegWrite       <= (rst) ? 1'b0     : ((EX_Stall) ? EX_RegWrite      : ((ID_Stall | ID_Flush) ? 1'b0 : ID_RegWrite));
+        EX_MemtoReg       <= (rst) ? 1'b0     : ((EX_Stall) ? EX_MemtoReg                                   : ID_MemtoReg);
         EX_RestartPC      <= (rst) ? 32'b0 : ((EX_Stall) ? EX_RestartPC                                  : ID_RestartPC);
-        EX_IsBDS          <= (rst) ? 0     : ((EX_Stall) ? EX_IsBDS                                      : ID_IsBDS);
+        EX_IsBDS          <= (rst) ? 1'b0     : ((EX_Stall) ? EX_IsBDS                                      : ID_IsBDS);
         EX_ReadData1      <= (rst) ? 32'b0 : ((EX_Stall) ? EX_ReadData1                                  : ID_ReadData1);
         EX_ReadData2      <= (rst) ? 32'b0 : ((EX_Stall) ? EX_ReadData2                                  : ID_ReadData2);
         EX_SignExtImMEM_pre <= (rst) ? 17'b0 : ((EX_Stall) ? EX_SignExtImMEM_pre                             : ID_SignExtImm);
         EX_Rs             <= (rst) ? 5'b0  : ((EX_Stall) ? EX_Rs                                         : ID_Rs);
         EX_Rt             <= (rst) ? 5'b0  : ((EX_Stall) ? EX_Rt                                         : ID_Rt);
-        EX_WantRsByEX     <= (rst) ? 0     : ((EX_Stall) ? EX_WantRsByEX    : ((ID_Stall | ID_Flush) ? 0 : ID_WantRsByEX));
-        EX_NeedRsByEX     <= (rst) ? 0     : ((EX_Stall) ? EX_NeedRsByEX    : ((ID_Stall | ID_Flush) ? 0 : ID_NeedRsByEX));
-        EX_WantRtByEX     <= (rst) ? 0     : ((EX_Stall) ? EX_WantRtByEX    : ((ID_Stall | ID_Flush) ? 0 : ID_WantRtByEX));
-        EX_NeedRtByEX     <= (rst) ? 0     : ((EX_Stall) ? EX_NeedRtByEX    : ((ID_Stall | ID_Flush) ? 0 : ID_NeedRtByEX));
+        EX_WantRsByEX     <= (rst) ? 1'b0     : ((EX_Stall) ? EX_WantRsByEX    : ((ID_Stall | ID_Flush) ? 1'b0 : ID_WantRsByEX));
+        EX_NeedRsByEX     <= (rst) ? 1'b0     : ((EX_Stall) ? EX_NeedRsByEX    : ((ID_Stall | ID_Flush) ? 1'b0 : ID_NeedRsByEX));
+        EX_WantRtByEX     <= (rst) ? 1'b0     : ((EX_Stall) ? EX_WantRtByEX    : ((ID_Stall | ID_Flush) ? 1'b0 : ID_WantRtByEX));
+        EX_NeedRtByEX     <= (rst) ? 1'b0     : ((EX_Stall) ? EX_NeedRtByEX    : ((ID_Stall | ID_Flush) ? 1'b0 : ID_NeedRtByEX));
     end
 
 endmodule
@@ -194,16 +194,16 @@ module EXEMEM_Stage(
     
     
     always @(posedge clk) begin
-        MEM_RegWrite      <= (rst) ? 0     : ((MEM_Stall) ? MEM_RegWrite      : ((EX_Stall | EX_Flush) ? 0 : EX_RegWrite));
-        MEM_RegWrite      <= (rst) ? 0     : ((MEM_Stall) ? MEM_RegWrite      : ((EX_Stall | EX_Flush) ? 0 : EX_RegWrite));
-        MEM_MemtoReg      <= (rst) ? 0     : ((MEM_Stall) ? MEM_MemtoReg                                   : EX_MemtoReg);
-        MEM_MemRead       <= (rst) ? 0     : ((MEM_Stall) ? MEM_MemRead       : ((EX_Stall | EX_Flush) ? 0 : EX_MemRead));
-        MEM_MemWrite      <= (rst) ? 0     : ((MEM_Stall) ? MEM_MemWrite      : ((EX_Stall | EX_Flush) ? 0 : EX_MemWrite));
-        MEM_MemByte       <= (rst) ? 0     : ((MEM_Stall) ? MEM_MemByte                                    : EX_MemByte);
-        MEM_MemHalf       <= (rst) ? 0     : ((MEM_Stall) ? MEM_MemHalf                                    : EX_MemHalf);
-        MEM_MemSignExt    <= (rst) ? 0     : ((MEM_Stall) ? MEM_MemSignExt                                 : EX_MemSignExt);
+        MEM_RegWrite      <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_RegWrite      : ((EX_Stall | EX_Flush) ? 1'b0 : EX_RegWrite));
+        MEM_RegWrite      <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_RegWrite      : ((EX_Stall | EX_Flush) ? 1'b0 : EX_RegWrite));
+        MEM_MemtoReg      <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_MemtoReg                                   : EX_MemtoReg);
+        MEM_MemRead       <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_MemRead       : ((EX_Stall | EX_Flush) ? 1'b0 : EX_MemRead));
+        MEM_MemWrite      <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_MemWrite      : ((EX_Stall | EX_Flush) ? 1'b0 : EX_MemWrite));
+        MEM_MemByte       <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_MemByte                                    : EX_MemByte);
+        MEM_MemHalf       <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_MemHalf                                    : EX_MemHalf);
+        MEM_MemSignExt    <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_MemSignExt                                 : EX_MemSignExt);
         MEM_RestartPC     <= (rst) ? 32'b0 : ((MEM_Stall) ? MEM_RestartPC                                  : EX_RestartPC);
-        MEM_IsBDS         <= (rst) ? 0     : ((MEM_Stall) ? MEM_IsBDS                                      : EX_IsBDS);
+        MEM_IsBDS         <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_IsBDS                                      : EX_IsBDS);
         MEM_ALU_Result    <= (rst) ? 32'b0 : ((MEM_Stall) ? MEM_ALU_Result                                 : EX_ALU_Result);
         MEM_ReadData2     <= (rst) ? 32'b0 : ((MEM_Stall) ? MEM_ReadData2                                  : EX_ReadData2);
         MEM_RtRd          <= (rst) ? 5'b0  : ((MEM_Stall) ? MEM_RtRd                                       : EX_RtRd);
@@ -235,8 +235,8 @@ module MEMWB_Stage(
     
     
     always @(posedge clk) begin
-        WB_RegWrite   <= (rst) ? 0     : ((WB_Stall) ? WB_RegWrite   : ((MEM_Stall | MEM_Flush) ? 0 : MEM_RegWrite));
-        WB_MemtoReg   <= (rst) ? 0     : ((WB_Stall) ? WB_MemtoReg                              : MEM_MemtoReg);
+        WB_RegWrite   <= (rst) ? 1'b0     : ((WB_Stall) ? WB_RegWrite   : ((MEM_Stall | MEM_Flush) ? 1'b0 : MEM_RegWrite));
+        WB_MemtoReg   <= (rst) ? 1'b0     : ((WB_Stall) ? WB_MemtoReg                              : MEM_MemtoReg);
         WB_ReadData   <= (rst) ? 32'b0 : ((WB_Stall) ? WB_ReadData                              : MEM_ReadData);
         WB_ALU_Result <= (rst) ? 32'b0 : ((WB_Stall) ? WB_ALU_Result                            : MEM_ALU_Result);
         WB_RtRd       <= (rst) ? 5'b0  : ((WB_Stall) ? WB_RtRd                                  : MEM_RtRd);

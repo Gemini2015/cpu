@@ -52,7 +52,7 @@ module Control(
     assign PCSrcSel[0]      = CtlBus[10];
     assign Link          = CtlBus[9];
     assign ALUSrcSel     = CtlBus[8];
-    assign RegDst        = CtlBus[7];
+    assign RegDest        = CtlBus[7];
     assign MemRead       = CtlBus[6];
     assign MemWrite      = CtlBus[5];
     assign MemHalf       = CtlBus[4];

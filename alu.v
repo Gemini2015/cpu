@@ -54,6 +54,9 @@ module ALU_Unit(
     
     // Initial
     assign AddSub_Mode = ((ALUOp == AluOp_Sub) | (ALUOp == AluOp_Subu));
+	 assign SignedA = A;
+	 assign SignedB = B;
+	 
     Adder32 adder(
     		.A(A),
     		.B(B),

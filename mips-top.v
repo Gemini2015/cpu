@@ -58,7 +58,7 @@ module Processor(
     wire ID_Link;
     wire ID_SignExt;
     wire ID_RegDest, ID_ALUSrcSel, ID_MemWrite, ID_MemRead, ID_MemByte, ID_MemHalf, ID_MemSignExt, ID_RegWrite, ID_MemtoReg;
-    wire [4:0] ID_ALUOp;
+    wire [3:0] ID_ALUOp;
     wire ID_NextIsDelay;
     //wire ID_Exception_Stall;
     wire ID_Exception_Flush;
@@ -80,7 +80,7 @@ module Processor(
     wire EX_Link;
     wire [1:0] EX_LinkRegDest;
     wire EX_ALUSrcSel;
-    wire [4:0] EX_ALUOp;
+    wire [3:0] EX_ALUOp;
     wire EX_MemRead, EX_MemWrite, EX_MemByte, EX_MemHalf, EX_MemSignExt, EX_RegWrite, EX_MemtoReg;
     wire [4:0] EX_Rs, EX_Rt;
     wire EX_WantRsByEX, EX_NeedRsByEX, EX_WantRtByEX, EX_NeedRtByEX;
@@ -106,7 +106,7 @@ module Processor(
     wire [31:0] MEM_MemReadData;
     wire [31:0] MEM_RestartPC;
     wire MEM_IsBDS;
-    wire [31:0] MEM_WriteData_Pre;
+    wire [31:0] MEM_WriteData;
     wire MEM_Exception_Stall;
 
     /*** WB (Writeback) Signals ***/
@@ -132,8 +132,8 @@ module Processor(
     // 
     always @(posedge clk)
     begin
-        IRead <= (rst) ? 1 : ~InstMem_Ready;
-        IReadMask <= (rst) ? 0 : ((IRead & InstMem_Ready) ? 1 : ((~IF_Stall) ? 0 : IReadMask));
+        IRead <= (rst) ? 1'b1 : ~InstMem_Ready;
+        IReadMask <= (rst) ? 1'b0 : ((IRead & InstMem_Ready) ? 1'b1 : ((~IF_Stall) ? 1'b0 : IReadMask));
     end
     assign InstMem_Read = IRead & ~IReadMask;
 
@@ -474,7 +474,7 @@ module Processor(
         .MemReadyFromMem  (DataMem_Ready),
         .Byte           (MEM_MemByte),
         .Half           (MEM_MemHalf),
-        .SignExt        (MEM_MemSignExtend),
+        .SignExt        (MEM_MemSignExt),
         .IF_Stall       (IF_Stall),
         
         .DataToCPU      (MEM_MemReadData),

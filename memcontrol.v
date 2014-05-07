@@ -18,9 +18,9 @@ module MemControl(
 	/**********  Input ***********/
 	input  clk,
     input  rst,
-    input  [`DP_WIDTH:0] DataFromCPU,           // Data from CPU
-    input  [`DP_WIDTH:0] Address,          // From CPU
-    input  [`DP_WIDTH:0] DataFromMem,        // Data from Memory
+    input  [`DP_WIDTH - 1:0] DataFromCPU,           // Data from CPU
+    input  [`DP_WIDTH - 1:0] Address,          // From CPU
+    input  [`DP_WIDTH - 1:0] DataFromMem,        // Data from Memory
     input  MemReadFromCPU,                 // Memory Read command from CPU
     input  MemWriteFromCPU,                // Memory Write command from CPU
     input  MemReadyFromMem,           // Ready signal from Memory, 0 - ready
@@ -30,8 +30,8 @@ module MemControl(
     input  IF_Stall,                // XXX Clean this up between this module and HAZ/FWD
 
     /**********  Output ***********/
-    output reg [`DP_WIDTH:0] DataToCPU,      // Data to CPU
-    output [`DP_WIDTH:0] DataToMem,       // Data to Memory
+    output reg [`DP_WIDTH - 1:0] DataToCPU,      // Data to CPU
+    output [`DP_WIDTH - 1:0] DataToMem,       // Data to Memory
     output reg[3:0] WriteEnable,   // Write Enable to Memory for each of 4 bytes of Memory
     output ReadEnable,              // Read Enable to Memory
     output MEM_Stall
@@ -42,7 +42,7 @@ module MemControl(
     
     reg RW_Mask;
     always @(posedge clk) begin
-        RW_Mask <= (rst) ? 0 : (((MemWriteFromCPU | MemReadFromCPU) & MemReadyFromMem) ? 1 : ((~MEM_Stall & ~IF_Stall) ? 0 : RW_Mask));
+        RW_Mask <= (rst) ? 1'b0 : (((MemWriteFromCPU | MemReadFromCPU) & MemReadyFromMem) ? 1'b1 : ((~MEM_Stall & ~IF_Stall) ? 1'b0 : RW_Mask));
     end
 
     assign MEM_Stall = ReadEnable | (WriteEnable != 4'b0000) | MemReadyFromMem;
