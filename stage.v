@@ -81,7 +81,7 @@ module IDEXE_Stage(
     // Data Signals
     input  [`DP_WIDTH - 1:0] ID_ReadData1,
     input  [`DP_WIDTH - 1:0] ID_ReadData2,
-    input  [`HALF_DP_WIDTH - 1:0] ID_SignExtImm, // ID_Rd, ID_Shamt included here
+    input  [`HALF_DP_WIDTH :0] ID_SignExtImm, // ID_Rd, ID_Shamt included here
     // ----------------
     output reg EX_Link,
     output [1:0] EX_LinkRegDest,
