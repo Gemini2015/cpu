@@ -75,7 +75,7 @@ module Processor(
     wire ID_IsFlushed;
 
     /*** EX (Execute) Signals ***/
-    wire EX_ALU_Stall, EX_Stall;
+    wire EX_Stall;
     wire [1:0] EX_RsFwdSel, EX_RtFwdSel;
     wire EX_Link;
     wire [1:0] EX_LinkRegDest;
@@ -184,7 +184,7 @@ module Processor(
         .MEM_MemWrite        (MEM_MemWrite),
         .InstMem_Read        (InstMem_Read),
         .InstMem_Ready       (InstMem_Ready),
-        .EX_ALU_Stall        (EX_ALU_Stall),
+        //.EX_ALU_Stall        (EX_ALU_Stall),
         .MEM_Stall_Controller (MEM_Stall_Controller),
 
         /***   output  *****/
@@ -256,6 +256,7 @@ module Processor(
 
 
     /*** Register File ***/
+	 
     RegFile RegisterFile (
         /***   Input  *****/
         .clk        (clk),
@@ -270,6 +271,9 @@ module Processor(
         .Adat       (ID_ReadData1_Front),
         .Bdat       (ID_ReadData2_Front)
     );
+	 
+	 
+	 
 
     /*** ID Rs Forwarding/Link Mux ***/
     MUX32_4_1  IDRsFwd_Mux (

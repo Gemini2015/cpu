@@ -51,7 +51,7 @@ endmodule
 module IDEXE_Stage(
 	input  clk,
     input  rst,
-    input  ID_Flush,
+    //input  ID_Flush,
     input  ID_Stall,
     input  EX_Stall,
     // Control Signals
@@ -76,7 +76,7 @@ module IDEXE_Stage(
     input  ID_NeedRsByEX,
     input  ID_WantRtByEX,
     input  ID_NeedRtByEX,
-    input  ID_RestartPC,
+    input  [`DP_WIDTH - 1:0] ID_RestartPC,
     input  ID_IsBDS,
     // Data Signals
     input  [`DP_WIDTH - 1:0] ID_ReadData1,
@@ -128,13 +128,13 @@ module IDEXE_Stage(
         EX_Link           <= (rst) ? 1'b0     : ((EX_Stall) ? EX_Link                                       : ID_Link);
         EX_RegDest         <= (rst) ? 1'b0     : ((EX_Stall) ? EX_RegDest                                     : ID_RegDest);
         EX_ALUSrcSel      <= (rst) ? 1'b0     : ((EX_Stall) ? EX_ALUSrcSel                                  : ID_ALUSrcSel);
-        EX_ALUOp          <= (rst) ? 4'b0  : ((EX_Stall) ? EX_ALUOp         : ((ID_Stall | ID_Flush) ? 4'b0 : ID_ALUOp));
-        EX_MemRead        <= (rst) ? 1'b0     : ((EX_Stall) ? EX_MemRead       : ((ID_Stall | ID_Flush) ? 1'b0 : ID_MemRead));
-        EX_MemWrite       <= (rst) ? 1'b0     : ((EX_Stall) ? EX_MemWrite      : ((ID_Stall | ID_Flush) ? 1'b0 : ID_MemWrite));
+        EX_ALUOp          <= (rst) ? 4'b0  : ((EX_Stall) ? EX_ALUOp         : (ID_Stall ? 4'b0 : ID_ALUOp));
+        EX_MemRead        <= (rst) ? 1'b0     : ((EX_Stall) ? EX_MemRead       : (ID_Stall ? 1'b0 : ID_MemRead));
+        EX_MemWrite       <= (rst) ? 1'b0     : ((EX_Stall) ? EX_MemWrite      : (ID_Stall ? 1'b0 : ID_MemWrite));
         EX_MemByte        <= (rst) ? 1'b0     : ((EX_Stall) ? EX_MemByte                                    : ID_MemByte);
         EX_MemHalf        <= (rst) ? 1'b0     : ((EX_Stall) ? EX_MemHalf                                    : ID_MemHalf);
         EX_MemSignExt     <= (rst) ? 1'b0     : ((EX_Stall) ? EX_MemSignExt                                 : ID_MemSignExt);
-        EX_RegWrite       <= (rst) ? 1'b0     : ((EX_Stall) ? EX_RegWrite      : ((ID_Stall | ID_Flush) ? 1'b0 : ID_RegWrite));
+        EX_RegWrite       <= (rst) ? 1'b0     : ((EX_Stall) ? EX_RegWrite      : (ID_Stall ? 1'b0 : ID_RegWrite));
         EX_MemtoReg       <= (rst) ? 1'b0     : ((EX_Stall) ? EX_MemtoReg                                   : ID_MemtoReg);
         EX_RestartPC      <= (rst) ? 32'b0 : ((EX_Stall) ? EX_RestartPC                                  : ID_RestartPC);
         EX_IsBDS          <= (rst) ? 1'b0     : ((EX_Stall) ? EX_IsBDS                                      : ID_IsBDS);
@@ -143,10 +143,10 @@ module IDEXE_Stage(
         EX_SignExtImMEM_pre <= (rst) ? 17'b0 : ((EX_Stall) ? EX_SignExtImMEM_pre                             : ID_SignExtImm);
         EX_Rs             <= (rst) ? 5'b0  : ((EX_Stall) ? EX_Rs                                         : ID_Rs);
         EX_Rt             <= (rst) ? 5'b0  : ((EX_Stall) ? EX_Rt                                         : ID_Rt);
-        EX_WantRsByEX     <= (rst) ? 1'b0     : ((EX_Stall) ? EX_WantRsByEX    : ((ID_Stall | ID_Flush) ? 1'b0 : ID_WantRsByEX));
-        EX_NeedRsByEX     <= (rst) ? 1'b0     : ((EX_Stall) ? EX_NeedRsByEX    : ((ID_Stall | ID_Flush) ? 1'b0 : ID_NeedRsByEX));
-        EX_WantRtByEX     <= (rst) ? 1'b0     : ((EX_Stall) ? EX_WantRtByEX    : ((ID_Stall | ID_Flush) ? 1'b0 : ID_WantRtByEX));
-        EX_NeedRtByEX     <= (rst) ? 1'b0     : ((EX_Stall) ? EX_NeedRtByEX    : ((ID_Stall | ID_Flush) ? 1'b0 : ID_NeedRtByEX));
+        EX_WantRsByEX     <= (rst) ? 1'b0     : ((EX_Stall) ? EX_WantRsByEX    : (ID_Stall ? 1'b0 : ID_WantRsByEX));
+        EX_NeedRsByEX     <= (rst) ? 1'b0     : ((EX_Stall) ? EX_NeedRsByEX    : (ID_Stall ? 1'b0 : ID_NeedRsByEX));
+        EX_WantRtByEX     <= (rst) ? 1'b0     : ((EX_Stall) ? EX_WantRtByEX    : (ID_Stall ? 1'b0 : ID_WantRtByEX));
+        EX_NeedRtByEX     <= (rst) ? 1'b0     : ((EX_Stall) ? EX_NeedRtByEX    : (ID_Stall ? 1'b0 : ID_NeedRtByEX));
     end
 
 endmodule
@@ -155,11 +155,11 @@ endmodule
 module EXEMEM_Stage(
     input  clk,
     input  rst,
-    input  EX_Flush,
+    //input  EX_Flush,
     input  EX_Stall,
     input  MEM_Stall,
     // Control Signals
-    input  EX_BZero,
+    //input  EX_BZero,
     input  EX_RegWrite,  // Future Control to WB
     input  EX_MemtoReg,  // Future Control to WB
     input  EX_MemRead,
@@ -194,11 +194,11 @@ module EXEMEM_Stage(
     
     
     always @(posedge clk) begin
-        MEM_RegWrite      <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_RegWrite      : ((EX_Stall | EX_Flush) ? 1'b0 : EX_RegWrite));
-        MEM_RegWrite      <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_RegWrite      : ((EX_Stall | EX_Flush) ? 1'b0 : EX_RegWrite));
+        MEM_RegWrite      <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_RegWrite      : (EX_Stall ? 1'b0 : EX_RegWrite));
+        MEM_RegWrite      <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_RegWrite      : (EX_Stall ? 1'b0 : EX_RegWrite));
         MEM_MemtoReg      <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_MemtoReg                                   : EX_MemtoReg);
-        MEM_MemRead       <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_MemRead       : ((EX_Stall | EX_Flush) ? 1'b0 : EX_MemRead));
-        MEM_MemWrite      <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_MemWrite      : ((EX_Stall | EX_Flush) ? 1'b0 : EX_MemWrite));
+        MEM_MemRead       <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_MemRead       : (EX_Stall ? 1'b0 : EX_MemRead));
+        MEM_MemWrite      <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_MemWrite      : (EX_Stall ? 1'b0 : EX_MemWrite));
         MEM_MemByte       <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_MemByte                                    : EX_MemByte);
         MEM_MemHalf       <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_MemHalf                                    : EX_MemHalf);
         MEM_MemSignExt    <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_MemSignExt                                 : EX_MemSignExt);
@@ -215,7 +215,7 @@ endmodule
 module MEMWB_Stage(
     input  clk,
     input  rst,
-    input  MEM_Flush,
+    //input  MEM_Flush,
     input  MEM_Stall,
     input  WB_Stall,
     // Control Signals
@@ -235,7 +235,7 @@ module MEMWB_Stage(
     
     
     always @(posedge clk) begin
-        WB_RegWrite   <= (rst) ? 1'b0     : ((WB_Stall) ? WB_RegWrite   : ((MEM_Stall | MEM_Flush) ? 1'b0 : MEM_RegWrite));
+        WB_RegWrite   <= (rst) ? 1'b0     : ((WB_Stall) ? WB_RegWrite   : (MEM_Stall ? 1'b0 : MEM_RegWrite));
         WB_MemtoReg   <= (rst) ? 1'b0     : ((WB_Stall) ? WB_MemtoReg                              : MEM_MemtoReg);
         WB_ReadData   <= (rst) ? 32'b0 : ((WB_Stall) ? WB_ReadData                              : MEM_ReadData);
         WB_ALU_Result <= (rst) ? 32'b0 : ((WB_Stall) ? WB_ALU_Result                            : MEM_ALU_Result);
