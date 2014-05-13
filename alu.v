@@ -40,8 +40,8 @@ module ALU_Unit(
     input[`ALUOP_WIDTH - 1:0]  ALUOp,
     input[4:0]	Shamt,
     output reg [`DP_WIDTH - 1:0]	Result,
-    output Carry,
-    output OverFlow
+    //output reg Carry
+    output reg OverFlow
 	);
 	
 	// Internal signals
@@ -49,13 +49,14 @@ module ALU_Unit(
 	// Add: AddSub_Mode = 0
 	// Sub: AddSub_Mode = 1
 	wire signed[`DP_WIDTH - 1:0] SignedA, SignedB;
-    wire AddSub_Mode;
-    wire[`DP_WIDTH - 1:0] AddSub_Result;
-    
+	wire AddSub_Mode;
+	wire[`DP_WIDTH - 1:0] AddSub_Result;
+   	wire carry,overflow; 
+   	
     // Initial
-    assign AddSub_Mode = ((ALUOp == AluOp_Sub) | (ALUOp == AluOp_Subu));
-	 assign SignedA = A;
-	 assign SignedB = B;
+   	assign AddSub_Mode = ((ALUOp == AluOp_Sub) | (ALUOp == AluOp_Subu));
+	assign SignedA = A;
+	assign SignedB = B;
 	 
     Adder32 adder(
     		.A(A),
@@ -63,8 +64,8 @@ module ALU_Unit(
     		.Cin(AddSub_Mode),
     		.m(AddSub_Mode),
     		.S(AddSub_Result),
-    		.Carry(Carry),
-    		.OverFlow(OverFlow)
+    		.Carry(carry),
+    		.OverFlow(overflow)
     		);
 
     always @(*)
@@ -84,6 +85,12 @@ module ALU_Unit(
             AluOp_Xor   : Result <= A ^ B;
             default     : Result <= 32'bx;
         endcase
+		  
+		case (ALUOp)
+			AluOp_Add	: OverFlow <= overflow;
+			AluOp_Sub	: OverFlow <= overflow;
+			default		: OverFlow <= 0;
+		endcase
     end
 
 endmodule
@@ -153,8 +160,6 @@ module ALU_Controller(
 endmodule
 */
 // 32 bit adder
-//对于有符号数，需要考察 OverFlow
-//对于无符号数，忽�OverFlow
 module Adder32(A, B, Cin, m, S, Carry, OverFlow);
     
     input[31:0]	A, B;
@@ -239,8 +244,7 @@ module Adder4(A, B, Cin, m, S, Carry, OverFlow);
 	and(x3, p[3],p[2],p[1],g[0]);
 	and(x4, p[3],p[2],p[1],p[0],Cin);
 	or (Carry, g[3], x1, x2, x3, x4);//c4=g3+p3g2+p3p2g1+p3p2p1g0+p3p2p1p0c0
-	//溢出的进位判断法
-	//符号位向前产生的进位值与尾数最高位向前产生的进位值相异时，才会溢�
+	
 	xor(OverFlow, w4, Carry);
 	
 endmodule

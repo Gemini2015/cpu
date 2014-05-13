@@ -91,7 +91,7 @@ module Processor(
     wire [4:0] EX_Rd, EX_RtRd, EX_Shamt;
     wire [31:0] EX_ALUResult;
     wire EX_BZero;
-    wire EX_EXC_Ov;
+    wire EX_OverFlow;
     wire [31:0] EX_RestartPC;
     wire EX_IsBDS;
 
@@ -415,7 +415,7 @@ module Processor(
         .ALUOp      (EX_ALUOp),
         .Shamt      (EX_Shamt),
         .Result     (EX_ALUResult),
-        .Carry      (EX_Carry),
+        //.Carry      (EX_Carry),
         .OverFlow   (EX_OverFlow)
     );
 
