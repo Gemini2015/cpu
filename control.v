@@ -9,11 +9,15 @@
 *	2014-4-26
 *
 ***/
+`timescale 1ns/1ps
+
 `ifndef MIPS_PARA
 
 `include "cpu_para.v"
 
 `endif
+
+`include "control.v"
 
 module Control(
     input  ID_Stall,
