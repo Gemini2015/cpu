@@ -1,3 +1,6 @@
+2014-5-13
+Control Module 是否需要 ID_Stall 信号？
+
 2014-4-10
 添加 alu.v
 
