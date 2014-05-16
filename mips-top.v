@@ -1,50 +1,44 @@
 /*
-*	MIPS CPU top module
+*   MIPS CPU top module
 *
-*	
+*   
 *
 *
-*	Chris Cheng
-*	2014-4-22
+*   Chris Cheng
+*   2014-4-22
 *
 ***/
 
-`ifndef MIPS_PARA
-
-`include "cpu_para.v"
-
-`endif
-
 module Processor(
-	input  clk,
+    input  clk,
     input  rst,
 
     // Instruction Memory Interface
-    input  [`DP_WIDTH - 1:0] InstMem_In,
-    output [`ADDR_WIDTH - 1:0] InstMem_Address,      // Addresses are words, not bytes. 30 bits, require external shifter,
+    input  [32 - 1:0] InstMem_In,
+    output [30 - 1:0] InstMem_Address,      // Addresses are words, not bytes. 30 bits, require external shifter,
     input  InstMem_Ready,
     output InstMem_Read,
     
     // Data Memory Interface
-    input  [`DP_WIDTH - 1:0] DataMem_In,
+    input  [32 - 1:0] DataMem_In,
     input  DataMem_Ready,
     output DataMem_Read, 
     output [3:0]  DataMem_Write,        // 4-bit Write, one for each byte in word.
-    output [`ADDR_WIDTH - 1:0] DataMem_Address,      // Addresses are words, not bytes. 30 bits, require external shifter
-    output [`DP_WIDTH - 1:0] DataMem_Out
+    output [30 - 1:0] DataMem_Address,      // Addresses are words, not bytes. 30 bits, require external shifter
+    output [32 - 1:0] DataMem_Out
     );
-	
-	
-	
-	/*** MIPS Instruction and Components (ID Stage) ***/
-    wire [`DP_WIDTH - 1:0] Instruction;
-    wire [`OPCODE_WIDTH - 1:0]  OpCode = Instruction[31:26];
-    wire [`REG_WIDTH - 1:0]  Rs = Instruction[25:21];
-    wire [`REG_WIDTH - 1:0]  Rt = Instruction[20:16];
-    wire [`REG_WIDTH - 1:0]  Rd = Instruction[15:11];
-    wire [`FUNCCODE_WIDTH - 1:0]  Func = Instruction[5:0];
-    wire [`HALF_DP_WIDTH - 1:0] Immediate = Instruction[15:0];
-    wire [`JUMPADDR_WIDTH - 1:0] JumpAddress = Instruction[25:0];
+    
+    
+    
+    /*** MIPS Instruction and Components (ID Stage) ***/
+    wire [32 - 1:0] Instruction;
+    wire [6 - 1:0]  OpCode = Instruction[31:26];
+    wire [5 - 1:0]  Rs = Instruction[25:21];
+    wire [5 - 1:0]  Rt = Instruction[20:16];
+    wire [5 - 1:0]  Rd = Instruction[15:11];
+    wire [6 - 1:0]  Func = Instruction[5:0];
+    wire [16 - 1:0] Immediate = Instruction[15:0];
+    wire [26 - 1:0] JumpAddress = Instruction[25:0];
 
     /*** IF (Instruction Fetch) Signals ***/
     wire IF_Stall, IF_Flush;
@@ -119,7 +113,7 @@ module Processor(
     wire [7:0] ID_DP_Hazards, HAZ_DP_Hazards;
 
     /*** Assignments ***/
-    assign IF_Instruction = (IF_Stall) ? 32'h00000000 : InstMem_In;
+    assign IF_Instruction = InstMem_In;//(IF_Stall) ? 32'h00000000 : InstMem_In;
     assign IF_IsBDS = ID_NextIsDelay;
     assign HAZ_DP_Hazards = {ID_DP_Hazards[7:4], EX_WantRsByEX, EX_NeedRsByEX, EX_WantRtByEX, EX_NeedRtByEX};
 
@@ -127,13 +121,13 @@ module Processor(
     reg IRead, IReadMask;
     // InstrMem Addresss & DataMem Address
     assign InstMem_Address = IF_PCOut[31:2];
-    assign DataMem_Address = MEM_ALUResult[31:2];
+    assign DataMem_Address = MEM_ALUResult[29:0];
 
     // 
     always @(posedge clk)
     begin
         IRead <= (rst) ? 1'b1 : ~InstMem_Ready;
-        IReadMask <= (rst) ? 1'b0 : ((IRead & InstMem_Ready) ? 1'b1 : ((~IF_Stall) ? 1'b0 : IReadMask));
+        IReadMask <= (rst) ? 1'b0 : ((IRead & InstMem_Ready) ? 1'b1 : ((~IF_Stall) ? 1'b0 : 1'b1/*IReadMask*/));
     end
     assign InstMem_Read = IRead & ~IReadMask;
 
@@ -256,7 +250,7 @@ module Processor(
 
 
     /*** Register File ***/
-	 
+     
     RegFile RegisterFile (
         /***   Input  *****/
         .clk        (clk),
@@ -271,9 +265,9 @@ module Processor(
         .Adat       (ID_ReadData1_Front),
         .Bdat       (ID_ReadData2_Front)
     );
-	 
-	 
-	 
+     
+     
+     
 
     /*** ID Rs Forwarding/Link Mux ***/
     MUX32_4_1  IDRsFwd_Mux (
