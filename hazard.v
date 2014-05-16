@@ -8,21 +8,18 @@
 *   2014-4-26
 *
 ***/
-`ifndef MIPS_PARA
 
-`include "cpu_para.v"
 
-`endif
 
 module Hazard_Detection(
-    input  [`HAZARD_WIDTH - 1:0] DP_Hazards,
-    input  [`REG_WIDTH - 1:0] ID_Rs,
-    input  [`REG_WIDTH - 1:0] ID_Rt,
-    input  [`REG_WIDTH - 1:0] EX_Rs,
-    input  [`REG_WIDTH - 1:0] EX_Rt,
-    input  [`REG_WIDTH - 1:0] EX_RtRd,
-    input  [`REG_WIDTH - 1:0] MEM_RtRd,
-    input  [`REG_WIDTH - 1:0] WB_RtRd,
+    input  [8 - 1:0] DP_Hazards,
+    input  [5 - 1:0] ID_Rs,
+    input  [5 - 1:0] ID_Rt,
+    input  [5 - 1:0] EX_Rs,
+    input  [5 - 1:0] EX_Rt,
+    input  [5 - 1:0] EX_RtRd,
+    input  [5 - 1:0] MEM_RtRd,
+    input  [5 - 1:0] WB_RtRd,
     input  EX_Link,
     input  EX_RegWrite,
     input  MEM_RegWrite,
@@ -101,7 +98,7 @@ module Hazard_Detection(
 
     // Trick allowed by RegDst = 0 which gives Rt. MEM_Rt is only used on
     // Data Memory write operations (stores), and RegWrite is always 0 in this case.
-    wire [`REG_WIDTH - 1:0] MEM_Rt = MEM_RtRd;
+    wire [5 - 1:0] MEM_Rt = MEM_RtRd;
     
     // Forwarding should not happen when the src/dst register is $zero
     wire EX_RtRd_NZ  = (EX_RtRd  != 5'b00000);
@@ -151,10 +148,10 @@ module Hazard_Detection(
 
     // Stalls and Control Flow Final Assignments    
     assign WB_Stall = MEM_Stall;
-    assign MEM_Stall = IF_Stall | MEM_Stall_Controller;
+    assign MEM_Stall = /*IF_Stall |*/ MEM_Stall_Controller;
     assign EX_Stall = (EX_Stall_1 | EX_Stall_2 ) | MEM_Stall;
     assign ID_Stall = (ID_Stall_1 | ID_Stall_2 | ID_Stall_3 | ID_Stall_4 ) | EX_Stall;
-    assign IF_Stall = InstMem_Read | InstMem_Ready;
+    assign IF_Stall = InstMem_Read & InstMem_Ready;
     
     // Forwarding Control Final Assignments
     assign ID_RsFwdSel = (ID_Fwd_1) ? 2'b01 : ((ID_Fwd_3) ? 2'b10 : 2'b00);

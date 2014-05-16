@@ -6,6 +6,15 @@
 *	2014-5-13
 *
 ***/
+`timescale 1ns/1ps
+
+`ifndef MIPS_PARA
+
+`include "cpu_para.v"
+
+`endif
+
+//`include "control.v"
 
 module testControl;
 
@@ -19,7 +28,7 @@ module testControl;
 	wire [`HAZARD_WIDTH - 1:0] DP_Hazards;
 	wire [`ALUOP_WIDTH - 1:0] ALUOp;
 
-	Control(
+	Control control(
 		.ID_Stall(ID_Stall),
 		.OpCode(OpCode),
 		.Func(Func),
@@ -62,8 +71,8 @@ module testControl;
 		#100	Func <= Func_Subu;
 		#100	ID_Stall <= 1;
 				Func <= Func_Xor;
-		#100	ID_Stall <= Func_Xor;
-		#100	OpCode <= Op_Addi;
+		#100	ID_Stall <= 0;
+		#100	OpCode <= Op_Addi; Func <= 0;
 		#100	OpCode <= Op_Addiu;
 		#100	OpCode <= Op_Andi;
 		#100	OpCode <= Op_Beq;
@@ -83,7 +92,7 @@ module testControl;
 		#100	OpCode <= Op_Sltiu;
 		#100	OpCode <= Op_Sw;
 		#100	OpCode <= Op_Xori;
-		#100	
+		#100;
 	end
 
 endmodule

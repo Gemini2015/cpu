@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
-// Engineer: 
+// Engineer: Chris Cheng
 // 
 // Create Date:    10:36:33 05/14/2014 
 // Design Name: 
@@ -18,6 +18,8 @@
 // Additional Comments: 
 //
 //////////////////////////////////////////////////////////////////////////////////
+
+
 module MemAdapter(
 	input clk,
 	input rst,
@@ -45,10 +47,11 @@ module MemAdapter(
 		delay_B <= (rst | ~reb) ? 2'b00 : ((delay_B == 2'b10) ? delay_B : delay_B + 1);
 	end
 	
-	always @(posedge clock)
+	// in ISE with iSim, it must be 2b'01
+	always @(posedge clk)
 	begin
-		dreadya <= (rst) ? 0 : ((wea != 4'b0000) || ((delay_A == 2'b01) && rea)) ? 1 : 0;
-		dreadyb <= (rst) ? 0 : ((web != 4'b0000) || ((delay_B == 2'b10) && reb)) ? 1 : 0;
+		dreadya <= (rst) ? 0 : ((wea != 4'b0000) || ((delay_A != 2'b01) && rea)) ? 1 : 0;
+		dreadyb <= (rst) ? 0 : ((web != 4'b0000) || ((delay_B != 2'b10) && reb)) ? 1 : 0;
 	end
 	
 	dataMem datamem(

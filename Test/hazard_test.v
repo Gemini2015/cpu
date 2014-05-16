@@ -8,18 +8,12 @@
 ***/
 `timescale 1ns / 1ps
 
-`ifndef MIPS_PARA
-
 `include "cpu_para.v"
-
-`endif
-
-`include "hazard.v"
 
 module testHazard;
 	
-	reg [`HAZARD_WIDTH - 1:0] DP_Hazards;
-	reg [`REG_WIDTH - 1:0] ID_Rs, ID_Rt, EX_Rs, EX_Rt, EX_RtRd, MEM_RtRd, WB_RtRd;
+	reg [8 - 1:0] DP_Hazards;
+	reg [5 - 1:0] ID_Rs, ID_Rt, EX_Rs, EX_Rt, EX_RtRd, MEM_RtRd, WB_RtRd;
 	reg EX_Link, EX_RegWrite, MEM_RegWrite, WB_RegWrite, MEM_MemRead, MEM_MemWrite;
 	reg InstMem_Read, InstMem_Ready, MEM_Stall_Controller;
 
@@ -93,6 +87,17 @@ module testHazard;
 		MEM_MemRead <= 1;
 		EX_Rs <= 1; EX_Rt <= 3;
 		EX_RtRd <= 2; WB_RtRd <= 0; EX_Link <= 0; EX_RegWrite <= 1; WB_RegWrite <= 0;
+		MEM_MemWrite <= 0; InstMem_Read <= 0; InstMem_Ready <= 0; MEM_Stall_Controller <= 0;
+	#50;
+	
+		DP_Hazards <= HZ_Lw;
+		ID_Rs <= 2;
+		ID_Rt <= 1;
+		MEM_RtRd <= 0;
+		MEM_RegWrite <= 0;
+		MEM_MemRead <= 0;
+		EX_Rs <= 0; EX_Rt <= 0;
+		EX_RtRd <= 0; WB_RtRd <= 0; EX_Link <= 0; EX_RegWrite <= 0; WB_RegWrite <= 0;
 		MEM_MemWrite <= 0; InstMem_Read <= 0; InstMem_Ready <= 0; MEM_Stall_Controller <= 0;
 	#50;
 	end

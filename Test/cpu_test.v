@@ -29,14 +29,6 @@ module testCPU;
     wire [3:0]  DataMem_WE;
     wire        DataMem_Read, InstMem_Read;
     wire        InstMem_Ready, DataMem_Ready;
-    
-    // Filtered Switch Input Signals
-    /*
-    wire Switches_RE;
-    wire Switches_WE;
-    wire Switches_Ready;
-    wire [7:0] Switches_DOUT;
-    */
 
     // Clock Generation
     clock Clock_Generator (
@@ -51,8 +43,6 @@ module testCPU;
     Processor MIPS32 (
         .clk            (clock1x),
         .rst            (reset),
-        //.Interrupts       (Interrupts),
-        //.NMI              (NMI),
         .DataMem_In       (DataMem_In),
         .DataMem_Ready    (DataMem_Ready),
         .DataMem_Read     (DataMem_Read),
@@ -63,11 +53,10 @@ module testCPU;
         .InstMem_Address  (InstMem_Address),
         .InstMem_Ready    (InstMem_Ready),
         .InstMem_Read     (InstMem_Read)
-        //.IP               (IP)
     );
 
     // On-Chip Block RAM
-    //MEM_592KB_Wrapper Memory (
+    // InstMem and DataMem adapter
     MemAdapter memadapter(
         .clk    (clock2x),
         .rst    (reset),
@@ -88,31 +77,18 @@ module testCPU;
     );
 
     
-    // Filtered Input Switches
-    /*
-    Switches Switches (
-        .clock       (clock2x),
-        .reset       (reset),
-        .Read        (Switches_RE),
-        .Write       (Switches_WE),
-        .Switch_in   (Switch),
-        .Ack         (Switches_Ready),
-        .Switch_out  (Switches_DOUT)
-    );
-    */
-     reg i;
+    reg i;
     initial begin
         // Initialize Inputs
         clocksrc = 0;
         
         // Wait 100 ns for global reset to finish
-        #100;
+        #50;
         
         // Add stimulus here
         for (i=0; i<1000; i=i+1) begin
             reset = (i < 28) ? 0 : 1;
             clocksrc = ~clocksrc;
-            //if (i > 100000) i = i - 1;
             #5;
         end
     end

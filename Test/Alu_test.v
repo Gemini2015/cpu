@@ -1,16 +1,14 @@
 // Verilog Test Fixture Template
 /*
-*	ALU test driver
-*
+*	ALU Test Driver
 *
 *	Chris Cheng
 *	2014-5-13
 *
-***/
+**/
 `timescale 1 ns / 1 ps
 
 module testAlu;
-
 	reg[31:0] A,B;
 	reg[3:0] ALUOp;
 	reg[4:0] Shamt;
@@ -19,16 +17,16 @@ module testAlu;
 	wire OverFlow;
 
 	ALU_Unit alu(
-		.A(A),
-		.B(B),
-		.ALUOp(ALUOp),
-		.Shamt(Shamt),
-		.Result(Result),
-		.OverFlow(OverFlow)
-		);
+			.A(A),
+			.B(B),
+			.ALUOp(ALUOp),
+			.Shamt(Shamt),
+			.Result(Result),
+			.OverFlow(OverFlow)
+			);
 
 	initial
-	begin
+		begin
 				A = 32'h7fff_fff0;
 				B = 32'h0000_0010;
 				Shamt = 4;
@@ -51,7 +49,7 @@ module testAlu;
 		#200	ALUOp = AluOp_Slt;
 		#200	ALUOp = AluOp_Sltu;
 		#200;
-	end
+		end
 
 endmodule
 

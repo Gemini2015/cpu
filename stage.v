@@ -1,42 +1,42 @@
 /*
-*	Pipeline stages
+*   Pipeline stages
 *
-*	five stages include : 
-*	IF/ID:		IFID
-*	ID/EXE:		IDEXE
-*	EXE/MEM:	EXEMEM
-*	MEM/WB:		MEMWB	
+*   five stages include : 
+*   IF/ID:      IFID
+*   ID/EXE:     IDEXE
+*   EXE/MEM:    EXEMEM
+*   MEM/WB:     MEMWB   
 *
 *
 *
-*	Chris Cheng
-*	2014-4-22
+*   Chris Cheng
+*   2014-4-22
 *
 ***/
-`include "cpu_para.v"
+
 
 //IF/ID stage
 module IFID_Stage(
-	input  clk,
+    input  clk,
     input  rst,
-    input  IF_Flush,		//IF flush signal
-    input  IF_Stall,		//IF stall signal 
-    input  ID_Stall,		//ID stall signal
+    input  IF_Flush,        //IF flush signal
+    input  IF_Stall,        //IF stall signal 
+    input  ID_Stall,        //ID stall signal
     // Control Signals
-    input  [`DP_WIDTH - 1:0] IF_Instruction,	//Instruction from IF
+    input  [32 - 1:0] IF_Instruction,   //Instruction from IF
     // Data Signals
-    input  [`DP_WIDTH - 1:0] IF_PCAdd4,			//PC+4 from IF
-    input  [`DP_WIDTH - 1:0] IF_PC,				//PC from IF
-    input  IF_IsBDS,			
+    input  [32 - 1:0] IF_PCAdd4,            //PC+4 from IF
+    input  [32 - 1:0] IF_PC,                //PC from IF
+    input  IF_IsBDS,            
     // ------------------
-    output reg [31:0] ID_Instruction,			//output Instruction
-    output reg [31:0] ID_PCAdd4,				//output PC+4
-    output reg [31:0] ID_RestartPC,				//
+    output reg [31:0] ID_Instruction,           //output Instruction
+    output reg [31:0] ID_PCAdd4,                //output PC+4
+    output reg [31:0] ID_RestartPC,             //
     output reg ID_IsBDS,
     output reg ID_IsFlushed
     );
 
-	always @(posedge clk) begin
+    always @(posedge clk) begin
         ID_Instruction <= (rst) ? 32'b0 : ((ID_Stall) ? ID_Instruction : ((IF_Stall | IF_Flush) ? 32'b0 : IF_Instruction));
         ID_PCAdd4      <= (rst) ? 32'b0 : ((ID_Stall) ? ID_PCAdd4                                       : IF_PCAdd4);
         ID_IsBDS       <= (rst) ? 1'b0     : ((ID_Stall) ? ID_IsBDS                                        : IF_IsBDS);
@@ -49,7 +49,7 @@ endmodule
 
 //ID/EXE stage
 module IDEXE_Stage(
-	input  clk,
+    input  clk,
     input  rst,
     //input  ID_Flush,
     input  ID_Stall,
@@ -58,7 +58,7 @@ module IDEXE_Stage(
     input  ID_Link,
     input  ID_RegDest,
     input  ID_ALUSrcSel,
-    input  [`ALUOP_WIDTH - 1:0] ID_ALUOp,
+    input  [4 - 1:0] ID_ALUOp,
     
     input  ID_MemRead,
     input  ID_MemWrite,
@@ -70,23 +70,23 @@ module IDEXE_Stage(
     input  ID_MemtoReg,
     
     // Hazard & Forwarding
-    input  [`REG_WIDTH - 1:0] ID_Rs,
-    input  [`REG_WIDTH - 1:0] ID_Rt,
+    input  [5 - 1:0] ID_Rs,
+    input  [5 - 1:0] ID_Rt,
     input  ID_WantRsByEX,
     input  ID_NeedRsByEX,
     input  ID_WantRtByEX,
     input  ID_NeedRtByEX,
-    input  [`DP_WIDTH - 1:0] ID_RestartPC,
+    input  [32 - 1:0] ID_RestartPC,
     input  ID_IsBDS,
     // Data Signals
-    input  [`DP_WIDTH - 1:0] ID_ReadData1,
-    input  [`DP_WIDTH - 1:0] ID_ReadData2,
-    input  [`HALF_DP_WIDTH :0] ID_SignExtImm, // ID_Rd, ID_Shamt included here
+    input  [32 - 1:0] ID_ReadData1,
+    input  [32 - 1:0] ID_ReadData2,
+    input  [16 :0] ID_SignExtImm, // ID_Rd, ID_Shamt included here
     // ----------------
     output reg EX_Link,
     output [1:0] EX_LinkRegDest,
     output reg EX_ALUSrcSel,
-    output reg [`ALUOP_WIDTH - 1:0] EX_ALUOp,
+    output reg [4 - 1:0] EX_ALUOp,
     
     output reg EX_MemRead,
     output reg EX_MemWrite,
@@ -97,21 +97,21 @@ module IDEXE_Stage(
     output reg EX_RegWrite,
     output reg EX_MemtoReg,
     
-    output reg [`REG_WIDTH - 1:0]  EX_Rs,
-    output reg [`REG_WIDTH - 1:0]  EX_Rt,
+    output reg [5 - 1:0]  EX_Rs,
+    output reg [5 - 1:0]  EX_Rt,
     output reg EX_WantRsByEX,
     output reg EX_NeedRsByEX,
     output reg EX_WantRtByEX,
     output reg EX_NeedRtByEX,
     
-    output reg [`DP_WIDTH - 1:0] EX_RestartPC,
+    output reg [32 - 1:0] EX_RestartPC,
     output reg EX_IsBDS,
     
-    output reg [`DP_WIDTH - 1:0] EX_ReadData1,
-    output reg [`DP_WIDTH - 1:0] EX_ReadData2,
-    output [`DP_WIDTH - 1:0] EX_SignExtImm,
-    output [`REG_WIDTH - 1:0]      EX_Rd,
-    output [`REG_WIDTH - 1:0]      EX_Shamt
+    output reg [32 - 1:0] EX_ReadData1,
+    output reg [32 - 1:0] EX_ReadData2,
+    output [32 - 1:0] EX_SignExtImm,
+    output [5 - 1:0]      EX_Rd,
+    output [5 - 1:0]      EX_Shamt
     );
 
 

@@ -1,41 +1,38 @@
 /*
-*	MIPS CPU Control Unit
+*   MIPS CPU Control Unit
 *
-*	Generate control signal include ALUOp
-*	
+*   Generate control signal include ALUOp
+*   
 *
 *
-*	Chris Cheng
-*	2014-4-26
+*   Chris Cheng
+*   2014-4-26
 *
 ***/
-`timescale 1ns/1ps
 
 `ifndef MIPS_PARA
+`define MIPS_PARA
 
 `include "cpu_para.v"
 
 `endif
 
-`include "control.v"
-
 module Control(
     input  ID_Stall,
-    input  [`OPCODE_WIDTH - 1:0] OpCode,
-    input  [`FUNCCODE_WIDTH - 1:0] Func,
+    input  [6 - 1:0] OpCode,
+    input  [6 - 1:0] Func,
     input  Comp_EQ,
     
     //------------
     output IF_Flush,
-    output reg [`HAZARD_WIDTH - 1:0] DP_Hazards,
+    output reg [8 - 1:0] DP_Hazards,
     output [1:0] PCSrcSel,
     output SignExt,
     output Link,
     output NextIsDelay,
     output RegDest,
     output ALUSrcSel,
-    output reg [`ALUOP_WIDTH - 1:0] ALUOp,
-    //output LLSC,
+    output reg [4 - 1:0] ALUOp,
     output MemWrite,
     output MemRead,
     output MemByte,
@@ -45,13 +42,13 @@ module Control(
     output MemtoReg
     );
 
-	
-	
-	//wire Movc;
-    wire Branch, Branch_EQ, Branch_NEQ;//, Branch_GTZ, Branch_LEZ, Branch_NEQ, Branch_GEZ, Branch_LTZ;
-   	//wire Unaligned_Mem;
     
-    reg [`CTLBUS_WIDTH - 1:0] CtlBus;
+    
+    //wire Movc;
+    wire Branch, Branch_EQ, Branch_NEQ;//, Branch_GTZ, Branch_LEZ, Branch_NEQ, Branch_GEZ, Branch_LTZ;
+    //wire Unaligned_Mem;
+    
+    reg [12 - 1:0] CtlBus;
     //
     assign PCSrcSel[0]      = CtlBus[10];
     assign Link          = CtlBus[9];
@@ -61,7 +58,7 @@ module Control(
     assign MemWrite      = CtlBus[5];
     assign MemHalf       = CtlBus[4];
     assign MemByte       = CtlBus[3];
-    assign MemSignExt	 = CtlBus[2];
+    assign MemSignExt    = CtlBus[2];
     assign RegWrite      = CtlBus[1];
     assign MemtoReg      = CtlBus[0];
     
@@ -69,85 +66,85 @@ module Control(
 
     always @(*)
     begin
-    	if (ID_Stall)
-    		CtlBus <= CB_None;
-    	else
-		begin
-			case(OpCode)
-				// R type Instruction
-				Op_Type_R:
-				begin
-					case(Func)
-						Func_Add 	: CtlBus <= CB_Add;
-						Func_Addu	: CtlBus <= CB_Addu;
-						Func_And	: CtlBus <= CB_And;
-						Func_Jr 	: CtlBus <= CB_Jr;
-						Func_Nor	: CtlBus <= CB_Nor;
-						Func_Or 	: CtlBus <= CB_Or;
-						Func_Sll	: CtlBus <= CB_Sll;
-						Func_Slt 	: CtlBus <= CB_Slt;
-						Func_Sltu 	: CtlBus <= CB_Sltu;
-						Func_Srl 	: CtlBus <= CB_Srl;
-						Func_Sub 	: CtlBus <= CB_Sub;
-						Func_Subu 	: CtlBus <= CB_Subu;
-						Func_Xor 	: CtlBus <= CB_Xor;
-						default 	: CtlBus <= CB_None;
-					endcase
-				end
-				Op_Addi     : CtlBus <= CB_Addi;
-	            Op_Addiu    : CtlBus <= CB_Addiu;
-	            Op_Andi     : CtlBus <= CB_Andi;
-	            Op_Jal      : CtlBus <= CB_Jal;
-	            Op_J 		: CtlBus <= CB_J;
-	            Op_Lb       : CtlBus <= CB_Lb;
-	            Op_Lbu      : CtlBus <= CB_Lbu;
-	            Op_Lh       : CtlBus <= CB_Lh;
-	            Op_Lhu      : CtlBus <= CB_Lhu;
-	            Op_Lui      : CtlBus <= CB_Lui;
-	            Op_Lw       : CtlBus <= CB_Lw;
-	            Op_Ori      : CtlBus <= CB_Ori;
-	            Op_Sb       : CtlBus <= CB_Sb;
-	            Op_Sh       : CtlBus <= CB_Sh;
-	            Op_Slti     : CtlBus <= CB_Slti;
-	            Op_Sltiu    : CtlBus <= CB_Sltiu;
-	            Op_Sw       : CtlBus <= CB_Sw;
-	            Op_Xori     : CtlBus <= CB_Xori;
-	            Op_Beq 		: CtlBus <= CB_Beq;
-	            Op_Bne 		: CtlBus <= CB_Bne;
-	            default     : CtlBus <= CB_None;
-			endcase
-		end
-	end
+        if (ID_Stall)
+            CtlBus <= CB_None;
+        else
+        begin
+            case(OpCode)
+                // R type Instruction
+                Op_Type_R:
+                begin
+                    case(Func)
+                        Func_Add    : CtlBus <= CB_Add;
+                        Func_Addu   : CtlBus <= CB_Addu;
+                        Func_And    : CtlBus <= CB_And;
+                        Func_Jr     : CtlBus <= CB_Jr;
+                        Func_Nor    : CtlBus <= CB_Nor;
+                        Func_Or     : CtlBus <= CB_Or;
+                        Func_Sll    : CtlBus <= CB_Sll;
+                        Func_Slt    : CtlBus <= CB_Slt;
+                        Func_Sltu   : CtlBus <= CB_Sltu;
+                        Func_Srl    : CtlBus <= CB_Srl;
+                        Func_Sub    : CtlBus <= CB_Sub;
+                        Func_Subu   : CtlBus <= CB_Subu;
+                        Func_Xor    : CtlBus <= CB_Xor;
+                        default     : CtlBus <= CB_None;
+                    endcase
+                end
+                Op_Addi     : CtlBus <= CB_Addi;
+                Op_Addiu    : CtlBus <= CB_Addiu;
+                Op_Andi     : CtlBus <= CB_Andi;
+                Op_Jal      : CtlBus <= CB_Jal;
+                Op_J        : CtlBus <= CB_J;
+                Op_Lb       : CtlBus <= CB_Lb;
+                Op_Lbu      : CtlBus <= CB_Lbu;
+                Op_Lh       : CtlBus <= CB_Lh;
+                Op_Lhu      : CtlBus <= CB_Lhu;
+                Op_Lui      : CtlBus <= CB_Lui;
+                Op_Lw       : CtlBus <= CB_Lw;
+                Op_Ori      : CtlBus <= CB_Ori;
+                Op_Sb       : CtlBus <= CB_Sb;
+                Op_Sh       : CtlBus <= CB_Sh;
+                Op_Slti     : CtlBus <= CB_Slti;
+                Op_Sltiu    : CtlBus <= CB_Sltiu;
+                Op_Sw       : CtlBus <= CB_Sw;
+                Op_Xori     : CtlBus <= CB_Xori;
+                Op_Beq      : CtlBus <= CB_Beq;
+                Op_Bne      : CtlBus <= CB_Bne;
+                default     : CtlBus <= CB_None;
+            endcase
+        end
+    end
 
-	// Hazard detection
-	always @(*)
+    // Hazard detection
+    always @(*)
     begin
-		case(OpCode)
-			// R type Instruction
-			Op_Type_R:
-			begin
-				case(Func)
-					Func_Add 	: DP_Hazards <= HZ_Add;
-					Func_Addu	: DP_Hazards <= HZ_Addu;
-					Func_And	: DP_Hazards <= HZ_And;
-					Func_Jr 	: DP_Hazards <= HZ_Jr;
-					Func_Nor	: DP_Hazards <= HZ_Nor;
-					Func_Or 	: DP_Hazards <= HZ_Or;
-					Func_Sll	: DP_Hazards <= HZ_Sll;
-					Func_Slt 	: DP_Hazards <= HZ_Slt;
-					Func_Sltu 	: DP_Hazards <= HZ_Sltu;
-					Func_Srl 	: DP_Hazards <= HZ_Srl;
-					Func_Sub 	: DP_Hazards <= HZ_Sub;
-					Func_Subu 	: DP_Hazards <= HZ_Subu;
-					Func_Xor 	: DP_Hazards <= HZ_Xor;
-					default 	: DP_Hazards <= HZ_None;
-				endcase
-			end
-			Op_Addi     : DP_Hazards <= HZ_Addi;
+        case(OpCode)
+            // R type Instruction
+            Op_Type_R:
+            begin
+                case(Func)
+                    Func_Add    : DP_Hazards <= HZ_Add;
+                    Func_Addu   : DP_Hazards <= HZ_Addu;
+                    Func_And        : DP_Hazards <= HZ_And;
+                    Func_Jr         : DP_Hazards <= HZ_Jr;
+                    Func_Nor        : DP_Hazards <= HZ_Nor;
+                    Func_Or     : DP_Hazards <= HZ_Or;
+                    Func_Sll    : DP_Hazards <= HZ_Sll;
+                    Func_Slt    : DP_Hazards <= HZ_Slt;
+                    Func_Sltu   : DP_Hazards <= HZ_Sltu;
+                    Func_Srl    : DP_Hazards <= HZ_Srl;
+                    Func_Sub    : DP_Hazards <= HZ_Sub;
+                    Func_Subu   : DP_Hazards <= HZ_Subu;
+                    Func_Xor    : DP_Hazards <= HZ_Xor;
+                    default     : DP_Hazards <= HZ_None;
+                endcase
+            end
+            Op_Addi     : DP_Hazards <= HZ_Addi;
             Op_Addiu    : DP_Hazards <= HZ_Addiu;
             Op_Andi     : DP_Hazards <= HZ_Andi;
             Op_Jal      : DP_Hazards <= HZ_Jal;
-            Op_J 		: DP_Hazards <= HZ_J;
+            Op_J        : DP_Hazards <= HZ_J;
             Op_Lb       : DP_Hazards <= HZ_Lb;
             Op_Lbu      : DP_Hazards <= HZ_Lbu;
             Op_Lh       : DP_Hazards <= HZ_Lh;
@@ -161,37 +158,37 @@ module Control(
             Op_Sltiu    : DP_Hazards <= HZ_Sltiu;
             Op_Sw       : DP_Hazards <= HZ_Sw;
             Op_Xori     : DP_Hazards <= HZ_Xori;
-            Op_Beq 		: DP_Hazards <= HZ_Beq;
-            Op_Bne 		: DP_Hazards <= HZ_Bne;
+            Op_Beq      : DP_Hazards <= HZ_Beq;
+            Op_Bne      : DP_Hazards <= HZ_Bne;
             default     : DP_Hazards <= HZ_None;
-		endcase
-	end
+        endcase
+    end
 
     // ALU Control signal
     always@(*)
-	begin
-		case(OpCode)
-			// R type Instruction
-			Op_Type_R:
-			begin
-				case(Func)
-					Func_Add 	: ALUOp <= AluOp_Add;
-					Func_Addu	: ALUOp <= AluOp_Addu;
-					Func_And	: ALUOp <= AluOp_And;
-					//Func_Jr:	ALUOp <= AluOp_;
-					Func_Nor	: ALUOp <= AluOp_Nor;
-					Func_Or 	: ALUOp <= AluOp_Or;
-					Func_Sll	: ALUOp <= AluOp_Sll;
-					Func_Slt 	: ALUOp <= AluOp_Slt;
-					Func_Sltu 	: ALUOp <= AluOp_Sltu;
-					Func_Srl 	: ALUOp <= AluOp_Srl;
-					Func_Sub 	: ALUOp <= AluOp_Sub;
-					Func_Subu 	: ALUOp <= AluOp_Subu;
-					Func_Xor 	: ALUOp <= AluOp_Xor;
-					default 	: ALUOp <= AluOp_Addu;
-				endcase
-			end
-			Op_Addi     : ALUOp <= AluOp_Add;
+    begin
+        case(OpCode)
+            // R type Instruction
+            Op_Type_R:
+            begin
+                case(Func)
+                    Func_Add    : ALUOp <= AluOp_Add;
+                    Func_Addu   : ALUOp <= AluOp_Addu;
+                    Func_And    : ALUOp <= AluOp_And;
+                    //Func_Jr:  ALUOp <= AluOp_;
+                    Func_Nor    : ALUOp <= AluOp_Nor;
+                    Func_Or     : ALUOp <= AluOp_Or;
+                    Func_Sll    : ALUOp <= AluOp_Sll;
+                    Func_Slt    : ALUOp <= AluOp_Slt;
+                    Func_Sltu   : ALUOp <= AluOp_Sltu;
+                    Func_Srl    : ALUOp <= AluOp_Srl;
+                    Func_Sub    : ALUOp <= AluOp_Sub;
+                    Func_Subu   : ALUOp <= AluOp_Subu;
+                    Func_Xor    : ALUOp <= AluOp_Xor;
+                    default     : ALUOp <= AluOp_Addu;
+                endcase
+            end
+            Op_Addi     : ALUOp <= AluOp_Add;
             Op_Addiu    : ALUOp <= AluOp_Addu;
             Op_Andi     : ALUOp <= AluOp_And;
             /*
@@ -211,9 +208,9 @@ module Control(
             Op_Sltiu    : ALUOp <= AluOp_Sltu;
             Op_Xori     : ALUOp <= AluOp_Xor;
             default     : ALUOp <= AluOp_Addu;
-		endcase
-	end
-	
+        endcase
+    end
+    
     /*** 
      These remaining options cover portions of the datapath that are not
      controlled directly by the datapath bits. Note that some refer to bits of

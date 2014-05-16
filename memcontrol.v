@@ -1,26 +1,22 @@
 /*
-*	MIPS CPU Memory Control
+*   MIPS CPU Memory Control
 *
-*	
+*   
 *
 *
-*	Chris Cheng
-*	2014-5-5
+*   Chris Cheng
+*   2014-5-5
 *
 ***/
-`ifndef MIPS_PARA
 
-`include "cpu_para.v"
-
-`endif
 
 module MemControl(
-	/**********  Input ***********/
-	input  clk,
+    /**********  Input ***********/
+    input  clk,
     input  rst,
-    input  [`DP_WIDTH - 1:0] DataFromCPU,           // Data from CPU
-    input  [`DP_WIDTH - 1:0] Address,          // From CPU
-    input  [`DP_WIDTH - 1:0] DataFromMem,        // Data from Memory
+    input  [32 - 1:0] DataFromCPU,           // Data from CPU
+    input  [32 - 1:0] Address,          // From CPU
+    input  [32 - 1:0] DataFromMem,        // Data from Memory
     input  MemReadFromCPU,                 // Memory Read command from CPU
     input  MemWriteFromCPU,                // Memory Write command from CPU
     input  MemReadyFromMem,           // Ready signal from Memory, 0 - ready
@@ -30,8 +26,8 @@ module MemControl(
     input  IF_Stall,                // XXX Clean this up between this module and HAZ/FWD
 
     /**********  Output ***********/
-    output reg [`DP_WIDTH - 1:0] DataToCPU,      // Data to CPU
-    output [`DP_WIDTH - 1:0] DataToMem,       // Data to Memory
+    output reg [32 - 1:0] DataToCPU,      // Data to CPU
+    output [32 - 1:0] DataToMem,       // Data to Memory
     output reg[3:0] WriteEnable,   // Write Enable to Memory for each of 4 bytes of Memory
     output ReadEnable,              // Read Enable to Memory
     output MEM_Stall
