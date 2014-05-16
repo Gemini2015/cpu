@@ -101,11 +101,11 @@ parameter [`ALUOP_WIDTH - 1:0]  AluOp_Or     = 5'd4;
 parameter [`ALUOP_WIDTH - 1:0]  AluOp_Sll    = 5'd5;
 parameter [`ALUOP_WIDTH - 1:0]  AluOp_Slt    = 5'd6;
 parameter [`ALUOP_WIDTH - 1:0]  AluOp_Sltu   = 5'd7;
-parameter [`ALUOP_WIDTH - 1:0]  AluOp_Sra    = 5'd8;
-parameter [`ALUOP_WIDTH - 1:0]  AluOp_Srl    = 5'd9;
-parameter [`ALUOP_WIDTH - 1:0]  AluOp_Sub    = 5'd10;
-parameter [`ALUOP_WIDTH - 1:0]  AluOp_Subu   = 5'd11;
-parameter [`ALUOP_WIDTH - 1:0]  AluOp_Xor    = 5'd12;
+//parameter [`ALUOP_WIDTH - 1:0]  AluOp_Sra    = 5'd8;
+parameter [`ALUOP_WIDTH - 1:0]  AluOp_Srl    = 5'd8;
+parameter [`ALUOP_WIDTH - 1:0]  AluOp_Sub    = 5'd9;
+parameter [`ALUOP_WIDTH - 1:0]  AluOp_Subu   = 5'd10;
+parameter [`ALUOP_WIDTH - 1:0]  AluOp_Xor    = 5'd11;
 
 /* Control Bus */
 /*** Control Signal ***
