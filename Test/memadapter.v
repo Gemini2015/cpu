@@ -41,16 +41,16 @@ module MemAdapter(
 	
 	reg [1:0] delay_A,delay_B;
 	
-	always @(posedge clk)
+	always @(posedge clk or posedge rst)
 	begin
-		delay_A <= (rst | ~rea) ? 2'b00 : ((delay_A == 2'b01) ? delay_A : delay_A + 1);
+		delay_A <= (rst | ~rea) ? 2'b00 : ((delay_A == 2'b10) ? delay_A : delay_A + 1);
 		delay_B <= (rst | ~reb) ? 2'b00 : ((delay_B == 2'b10) ? delay_B : delay_B + 1);
 	end
 	
 	// in ISE with iSim, it must be 2b'01
-	always @(posedge clk)
+	always @(posedge clk or posedge rst)
 	begin
-		dreadya <= (rst) ? 0 : ((wea != 4'b0000) || ((delay_A != 2'b01) && rea)) ? 1 : 0;
+		dreadya <= (rst) ? 0 : ((wea != 4'b0000) || ((delay_A != 2'b10) && rea)) ? 1 : 0;
 		dreadyb <= (rst) ? 0 : ((web != 4'b0000) || ((delay_B != 2'b10) && reb)) ? 1 : 0;
 	end
 	

@@ -23,19 +23,35 @@
 *
 */
 
-module RegFile(clk, rst, regA, regB, regW, Wdat, RegWrite, Adat, Bdat);
-	
+module RegFile(
+    input clk, 
+    input rst,
+    // for test
+    input [4:0] DisReg,
+    output [31:0] DisRegData,
+    
+    
+    input [4:0] regA, regB, regW,
+    input [31:0] Wdat,
+    input RegWrite,
+    output [31:0] Adat,
+    output [31:0] Bdat
+    );
+	/*
 	input clk, rst, RegWrite;
    	input [4:0] regA, regB, regW;
    	input [31:0] Wdat;
    	output [31:0] Adat, Bdat;
-
+    */
    	reg [31:0] iRegf[31:1];
    	integer i;
 
 	assign Adat = (regA == 0) ? 32'h0000_0000 : iRegf[regA];
 	assign Bdat = (regB == 0) ? 32'h0000_0000 : iRegf[regB];
-
+    
+    //for test
+    assign DisRegData = (DisReg == 0) ? 32'h0000_0000 : iRegf[DisReg];
+    
 	initial 
 	begin
 		for (i = 1; i < 32; i = i + 1)
@@ -44,7 +60,7 @@ module RegFile(clk, rst, regA, regB, regW, Wdat, RegWrite, Adat, Bdat);
 		end
 	end
 	
-	always @(posedge clk)
+	always @(posedge clk or posedge rst)
 	begin
 		if(rst)
 		begin
@@ -71,7 +87,7 @@ module Register(clk, rst, RegWrite, idat, odat);
 	initial
 		odat = 0;
 
-	always @(posedge clk) begin
+	always @(posedge clk or posedge rst) begin
 		if(rst) odat <= 0;
 		else begin 
 			if(RegWrite) odat <= idat;

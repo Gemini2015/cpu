@@ -78,6 +78,7 @@ module ALU_Unit(
             AluOp_Sub   : Result <= AddSub_Result;
             AluOp_Subu  : Result <= AddSub_Result;
             AluOp_Xor   : Result <= A ^ B;
+            AluOp_Lui   : Result <= {B[15:0],16'b0};
             default     : Result <= 32'bx;
         endcase
           
@@ -173,12 +174,14 @@ module Adder32(A, B, Cin, m, S, Carry, OverFlow);
 endmodule
 
 module PCAdder(
-    input[31:0] a,
-    input[31:0] b,
+    input signed[31:0] a,
+    input signed[31:0] b,
     output[31:0] res
     );
-
-    assign res = a + b;
+    
+    //wire signed[31:0] SignedA;
+    //wire signed[31:0] SignedB;
+    assign res = a + b;//SignedA + SignedB;
 
 endmodule
 

@@ -83,7 +83,7 @@ module testCPU;
         clocksrc = 0;
         
         // Wait 100 ns for global reset to finish
-        #50;
+        #100;
         
         // Add stimulus here
         for (i=0; i<1000; i=i+1) begin

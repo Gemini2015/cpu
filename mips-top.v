@@ -12,6 +12,10 @@
 module Processor(
     input  clk,
     input  rst,
+    
+    //for test
+    input [4:0] DisReg,
+    output [31:0] DisRegData,
 
     // Instruction Memory Interface
     input  [32 - 1:0] InstMem_In,
@@ -127,7 +131,7 @@ module Processor(
     always @(posedge clk)
     begin
         IRead <= (rst) ? 1'b1 : ~InstMem_Ready;
-        IReadMask <= (rst) ? 1'b0 : ((IRead & InstMem_Ready) ? 1'b1 : ((~IF_Stall) ? 1'b0 : 1'b1/*IReadMask*/));
+        IReadMask <= (rst) ? 1'b0 : ((IRead & InstMem_Ready) ? 1'b1 : ((~IF_Stall) ? 1'b0 : IReadMask));
     end
     assign InstMem_Read = IRead & ~IReadMask;
 
@@ -260,6 +264,10 @@ module Processor(
         .regW       (WB_RtRd),
         .Wdat       (WB_WriteData),
         .RegWrite   (WB_RegWrite),
+        
+        // for test
+        .DisReg     (DisReg),
+        .DisRegData (DisRegData),
 
         /***   Output  *****/
         .Adat       (ID_ReadData1_Front),

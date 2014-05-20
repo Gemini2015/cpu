@@ -66,10 +66,10 @@ module Control(
 
     always @(*)
     begin
-        if (ID_Stall)
-            CtlBus <= CB_None;
-        else
-        begin
+        //if (ID_Stall)
+            //CtlBus <= CB_None;
+        //else
+        //begin
             case(OpCode)
                 // R type Instruction
                 Op_Type_R:
@@ -113,7 +113,7 @@ module Control(
                 Op_Bne      : CtlBus <= CB_Bne;
                 default     : CtlBus <= CB_None;
             endcase
-        end
+        //end
     end
 
     // Hazard detection
@@ -191,6 +191,7 @@ module Control(
             Op_Addi     : ALUOp <= AluOp_Add;
             Op_Addiu    : ALUOp <= AluOp_Addu;
             Op_Andi     : ALUOp <= AluOp_And;
+            Op_Lui      : ALUOp <= AluOp_Lui;
             /*
             Op_Jal      : ALUOp <= AluOp_Addu;
             Op_Lb       : ALUOp <= AluOp_Addu;
@@ -233,7 +234,7 @@ module Control(
      * Branch Delay Slot should these be implemented later.
      */
 
-    assign IF_Flush = 0;
+    assign IF_Flush = Branch | CtlBus[10];
 
     // Indicator that next instruction is a Branch Delay Slot.
     assign NextIsDelay = CtlBus[11] | CtlBus[10];

@@ -148,10 +148,10 @@ module Hazard_Detection(
 
     // Stalls and Control Flow Final Assignments    
     assign WB_Stall = MEM_Stall;
-    assign MEM_Stall = /*IF_Stall |*/ MEM_Stall_Controller;
+    assign MEM_Stall = IF_Stall | MEM_Stall_Controller;
     assign EX_Stall = (EX_Stall_1 | EX_Stall_2 ) | MEM_Stall;
     assign ID_Stall = (ID_Stall_1 | ID_Stall_2 | ID_Stall_3 | ID_Stall_4 ) | EX_Stall;
-    assign IF_Stall = InstMem_Read & InstMem_Ready;
+    assign IF_Stall = InstMem_Read | InstMem_Ready;// | ID_Stall;
     
     // Forwarding Control Final Assignments
     assign ID_RsFwdSel = (ID_Fwd_1) ? 2'b01 : ((ID_Fwd_3) ? 2'b10 : 2'b00);

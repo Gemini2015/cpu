@@ -36,7 +36,7 @@ module IFID_Stage(
     output reg ID_IsFlushed
     );
 
-    always @(posedge clk) begin
+    always @(posedge clk or posedge rst) begin
         ID_Instruction <= (rst) ? 32'b0 : ((ID_Stall) ? ID_Instruction : ((IF_Stall | IF_Flush) ? 32'b0 : IF_Instruction));
         ID_PCAdd4      <= (rst) ? 32'b0 : ((ID_Stall) ? ID_PCAdd4                                       : IF_PCAdd4);
         ID_IsBDS       <= (rst) ? 1'b0     : ((ID_Stall) ? ID_IsBDS                                        : IF_IsBDS);
@@ -123,7 +123,7 @@ module IDEXE_Stage(
     assign EX_Shamt = EX_SignExtImm[10:6];
     assign EX_SignExtImm = (EX_SignExtImMEM_pre[16]) ? {15'h7fff, EX_SignExtImMEM_pre[16:0]} : {15'h0000, EX_SignExtImMEM_pre[16:0]};
     
-    always @(posedge clk) 
+    always @(posedge clk or posedge rst) 
     begin
         EX_Link           <= (rst) ? 1'b0     : ((EX_Stall) ? EX_Link                                       : ID_Link);
         EX_RegDest         <= (rst) ? 1'b0     : ((EX_Stall) ? EX_RegDest                                     : ID_RegDest);
@@ -193,7 +193,7 @@ module EXEMEM_Stage(
   
     
     
-    always @(posedge clk) begin
+    always @(posedge clk or posedge rst) begin
         MEM_RegWrite      <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_RegWrite      : (EX_Stall ? 1'b0 : EX_RegWrite));
         MEM_RegWrite      <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_RegWrite      : (EX_Stall ? 1'b0 : EX_RegWrite));
         MEM_MemtoReg      <= (rst) ? 1'b0     : ((MEM_Stall) ? MEM_MemtoReg                                   : EX_MemtoReg);
@@ -234,7 +234,7 @@ module MEMWB_Stage(
     );
     
     
-    always @(posedge clk) begin
+    always @(posedge clk or posedge rst) begin
         WB_RegWrite   <= (rst) ? 1'b0     : ((WB_Stall) ? WB_RegWrite   : (MEM_Stall ? 1'b0 : MEM_RegWrite));
         WB_MemtoReg   <= (rst) ? 1'b0     : ((WB_Stall) ? WB_MemtoReg                              : MEM_MemtoReg);
         WB_ReadData   <= (rst) ? 32'b0 : ((WB_Stall) ? WB_ReadData                              : MEM_ReadData);

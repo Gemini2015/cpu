@@ -37,7 +37,7 @@ module MemControl(
     wire Word = ~(Half | Byte);
     
     reg RW_Mask;
-    always @(posedge clk) begin
+    always @(posedge clk or posedge rst) begin
         RW_Mask <= (rst) ? 1'b0 : (((MemWriteFromCPU | MemReadFromCPU) & MemReadyFromMem) ? 1'b1 : ((~MEM_Stall & ~IF_Stall) ? 1'b0 : RW_Mask));
     end
 
