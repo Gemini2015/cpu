@@ -31,25 +31,3 @@ module Mux32_2_1(
 		endcase
 	end
 endmodule
-
-
-module Adder32_2_1(
-	input[31:0] in0,
-	input[31:0] in1,
-	output[31:0] out
-);
-	
-	assign out = in0 + in1;
-
-endmodule
-
-module AdderS32_2_1(
-	input signed[31:0] in0,
-	input signed[31:0] in1,
-	output signed[31:0] out
-);
-
-	assign out = in0 + in1;
-
-endmodule
-
