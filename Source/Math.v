@@ -112,11 +112,54 @@ module ALUnit(
 	input[31:0] inA,
 	input[31:0] inB,
 	input[3:0] ALUOp,
-	input[4:0] Shamt,
+	input[4:0] shamt,
 	output reg[31:0] out,
 	output reg overFlow
 );
 
+	wire signed[31:0] signedInA, signedInB;
+	wire mode;
+	wire[31:0] addsub_result;
+	wire carry, of;
 
+	assign mode = ((ALUOp == ALUOp_Sub) | (ALUOp == ALUOp_Subu));
+	assign signedInA = inA;
+	assign signedInB = inB;
+
+	AddSub32_2_1 addsub(
+		.inA(inA),
+		.inB(inB),
+		.cin(mode),
+		.mode(mode),
+		.out(addsub_result),
+		.carry(carry),
+		.overFlow(of)
+	);
+
+	always @(*)
+	begin
+		case(ALUOp)
+			ALUOp_Add	: out <= addsub_result;
+			ALUOp_Addu	: out <= addsub_result;
+			ALUOp_And	: out <= inA & inB;
+			ALUOp_Nor	: out <= ~(inA | inB);
+			ALUOp_Or	: out <= inA | inB;
+			ALUOp_Sll	: out <= inB << shamt;
+			ALUOp_Slt	: out <= (signedInA < signedInB) ? 32'h0000_0001 : 32'h0000_0000;
+			ALUOp_Sltu	: out <= (inA < inB) ? 32'h0000_0001 : 32'h0000_0000;
+			ALUOp_Srl	: out <= inB >> shamt;
+			ALUOp_Sub	: out <= addsub_result;
+			ALUOp_Subu	: out <= addsub_result;
+			ALUOp_Xor	: out <= inA ^ inB;
+			ALUOp_Lui	: out <= {inB[15:0], 16'b0};
+			default		: out <= 32'bx;
+		endcase
+
+		case(ALUOp)
+			ALUOp_Add	: overFlow <= of;
+			ALUOp_Sub	: overFlow <= of;
+			default		: overFlow <= 0;
+		endcase
+	end
 
 endmodule
