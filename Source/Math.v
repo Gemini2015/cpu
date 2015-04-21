@@ -1,4 +1,8 @@
 `timescale 1ns / 1ps
+`ifndef Math_V
+`define Math_V
+
+`include "ParamDefine.v"
 
 module AddSub4_2_1(
 	input[3:0] inA,
@@ -163,3 +167,5 @@ module ALUnit(
 	end
 
 endmodule
+
+`endif
